@@ -1,0 +1,91 @@
+export default {
+  brand: {
+    name: "आरोग्य टाइमलाइन",
+    tagline: "तुमची वैयक्तिक आरोग्य स्मरणिका"
+  },
+  nav: {
+    home: "मुख्यपृष्ठ",
+    calendar: "कॅलेंडर",
+    timeline: "टाइमलाइन",
+    addRecord: "नोंद जोडा",
+    records: "वैद्यकीय नोंदी",
+    trends: "आरोग्य कल",
+    story: "आरोग्य प्रवास",
+    aiAssistant: "एआय सहाय्यक",
+    doctors: "डॉक्टर्स",
+    appointments: "भेटी",
+    reminders: "स्मरणपत्रे",
+    profile: "आरोग्य प्रोफाइल",
+    settings: "सेटिंग्ज",
+    logout: "लॉग आउट"
+  },
+  common: {
+    save: "जतन करा",
+    cancel: "रद्द करा",
+    confirm: "पुष्टी करा",
+    edit: "संपादित करा",
+    delete: "हटवा",
+    view: "पहा",
+    download: "डाउनलोड",
+    share: "शेअर करा",
+    print: "प्रिंट",
+    upload: "अपलोड",
+    search: "नोंदी, डॉक्टर्स, लक्षणे शोधा...",
+    filter: "फिल्टर",
+    all: "सर्व",
+    today: "आज",
+    upcoming: "आगामी",
+    recent: "अलीकडील",
+    back: "मागे",
+    next: "पुढे",
+    done: "पूर्ण",
+    close: "बंद करा",
+    loading: "लोड होत आहे...",
+    noData: "कोणत्याही नोंदी आढळल्या नाहीत",
+    tapToSpeak: "बोलण्यासाठी टॅप करा",
+    listening: "ऐकत आहे...",
+    processing: "प्रक्रिया सुरू आहे...",
+    understanding: "समजून घेत आहे..."
+  },
+  home: {
+    greeting: "शुभ प्रभात",
+    howAreYouFeeling: "आज तुम्हाला कसे वाटत आहे?",
+    voicePrompt: "काहीतरी सांगा...",
+    voiceExample: "\"मला काल सकाळपासून डोकेदुखी जाणवत आहे...\"",
+    quickRecord: "जलद नोंद",
+    todayEvents: "आजच्या आरोग्य हालचाली",
+    upcomingSchedule: "आगामी वेळापत्रक",
+    healthSnapshot: "आरोग्य स्थिती सारांश",
+    healthStoryBanner: "तुमचा आरोग्य प्रवास",
+    healthStoryDesc: "एआय विश्लेषणासह तुमचा आरोग्य इतिहास पहा.",
+    viewTimeline: "टाइमलाइन पहा"
+  },
+  recordTypes: {
+    blood_pressure: "रक्तदाब (BP)",
+    blood_sugar: "रक्त शर्करा (Sugar)",
+    weight: "वजन",
+    temperature: "तापमान",
+    medicine: "औषध",
+    symptom: "लक्षण",
+    doctor_visit: "डॉक्टर भेट",
+    document: "कागदपत्र",
+    photo: "फोटो",
+    note: "वैयक्तिक नोंद",
+    reminder: "स्मरणपत्र",
+    voice: "आवाज नोंद",
+    other: "इतर"
+  },
+  ai: {
+    title: "तुमचा आरोग्य सहाय्यक",
+    subtitle: "तुमच्या आरोग्य इतिहासाबद्दल प्रश्न विचारा.",
+    disclaimer: "एआय सारांश केवळ माहितीसाठी आहेत आणि डॉक्टरांकडून पडताळून पाहिले पाहिजेत.",
+    suggestedQueries: [
+      "या महिन्यात माझ्या आरोग्यात काय बदल झाले?",
+      "माझे अलीकडील रक्तदाब आकडे दाखवा",
+      "माझी शेवटची डॉक्टर भेट कधी होती?",
+      "माझ्या शेवटच्या अहवालाचा सारांश द्या",
+      "मी कोणती औषधे घेतली आहेत?",
+      "पुढील डॉक्टर भेटीची तयारी करा"
+    ]
+  }
+};

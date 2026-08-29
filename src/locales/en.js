@@ -1,0 +1,91 @@
+export default {
+  brand: {
+    name: "AarogyaTimeline",
+    tagline: "Your Personal Health Memory"
+  },
+  nav: {
+    home: "Home",
+    calendar: "Calendar",
+    timeline: "Timeline",
+    addRecord: "Add Record",
+    records: "Medical Records",
+    trends: "Health Trends",
+    story: "Health Story",
+    aiAssistant: "AI Assistant",
+    doctors: "Doctors",
+    appointments: "Appointments",
+    reminders: "Reminders",
+    profile: "Health Profile",
+    settings: "Settings",
+    logout: "Sign Out"
+  },
+  common: {
+    save: "Save",
+    cancel: "Cancel",
+    confirm: "Confirm",
+    edit: "Edit",
+    delete: "Delete",
+    view: "View",
+    download: "Download",
+    share: "Share",
+    print: "Print",
+    upload: "Upload",
+    search: "Search records, doctors, symptoms...",
+    filter: "Filter",
+    all: "All",
+    today: "Today",
+    upcoming: "Upcoming",
+    recent: "Recent",
+    back: "Back",
+    next: "Next",
+    done: "Done",
+    close: "Close",
+    loading: "Loading...",
+    noData: "No records found",
+    tapToSpeak: "Tap to speak",
+    listening: "Listening...",
+    processing: "Processing...",
+    understanding: "Understanding..."
+  },
+  home: {
+    greeting: "Good morning",
+    howAreYouFeeling: "How are you feeling today?",
+    voicePrompt: "Tell me something...",
+    voiceExample: "\"I've had a mild headache since yesterday morning...\"",
+    quickRecord: "Quick Record",
+    todayEvents: "Today's Health Activity",
+    upcomingSchedule: "Upcoming Schedule",
+    healthSnapshot: "Health Snapshot",
+    healthStoryBanner: "Your Health Story",
+    healthStoryDesc: "View your personal health journey chronologically with AI insights.",
+    viewTimeline: "View Timeline"
+  },
+  recordTypes: {
+    blood_pressure: "Blood Pressure",
+    blood_sugar: "Blood Sugar",
+    weight: "Weight",
+    temperature: "Temperature",
+    medicine: "Medicine",
+    symptom: "Symptom",
+    doctor_visit: "Doctor Visit",
+    document: "Document",
+    photo: "Photo",
+    note: "Personal Note",
+    reminder: "Reminder",
+    voice: "Voice Record",
+    other: "Other"
+  },
+  ai: {
+    title: "Your Health Assistant",
+    subtitle: "Ask questions about your recorded health history.",
+    disclaimer: "AI-generated summaries are informational and should be verified with a qualified healthcare professional.",
+    suggestedQueries: [
+      "What happened with my health this month?",
+      "Show my recent blood pressure readings",
+      "When was my last doctor visit?",
+      "Summarize my last medical report",
+      "What medicines have I recorded?",
+      "Prepare me for my next doctor visit"
+    ]
+  }
+};

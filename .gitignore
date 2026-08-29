@@ -1,0 +1,63 @@
+# ─────────────────────────────────────────────────────────────
+# SIH Health Memory — .gitignore
+# ─────────────────────────────────────────────────────────────
+
+# ── Environment ──
+# Vite + Supabase secrets (never commit real keys)
+.env.local
+.env
+env/
+!.env.local.example
+
+# ── Node / Build artifacts ──
+node_modules/
+dist/
+build/
+.cache/
+.vite/
+
+# ── IDE & Editor ──
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ── OS cruft ──
+.DS_Store
+.AppleDouble
+.LSOverride
+.Spotlight-V1000
+.Trashes
+
+# ── Logs ──
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ── Vite / Vitepress build output ──
+.vite/
+.output/
+
+# ── Coverage / Testing ──
+coverage/
+.nyc_output/
+.coverage/
+
+# ── OSgenerated junk files ──
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ── Temporary / Misc ──
+*.tmp
+*.temp
+.angular/
