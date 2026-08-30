@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
-import { 
-  User, 
-  Edit3, 
-  Save, 
-  Activity, 
-  Heart, 
-  Pill, 
-  AlertCircle, 
-  ShieldCheck, 
-  Phone, 
-  Sparkles, 
-  Mic, 
-  Check 
+import {
+  User,
+  Edit3,
+  Save,
+  Activity,
+  Heart,
+  Pill,
+  AlertCircle,
+  ShieldCheck,
+  Phone,
+  Sparkles,
+  Mic,
+  Check,
+  Fingerprint,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useHealth } from '../../context/HealthContext';
@@ -119,7 +120,51 @@ export const ProfilePage = () => {
 
       {/* Grid of Profile Sections */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        
+
+        {/* 0. ABHA (Ayushman Bharat Health Account) */}
+        <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-soft space-y-3">
+          <h3 className="text-xs font-bold text-teal-600 uppercase tracking-wider flex items-center gap-2">
+            <Fingerprint className="w-4 h-4 text-teal-600" />
+            <span>ABHA (Health ID)</span>
+          </h3>
+
+          {user?.abhaAddress || user?.abhaNumber ? (
+            <div className="space-y-2 text-xs">
+              <div className="p-3 rounded-xl bg-teal-50 border border-teal-100">
+                <span className="text-[11px] font-semibold text-teal-700 block">ABHA Address</span>
+                <span className="text-teal-900 font-bold text-sm block break-all">
+                  {user.abhaAddress}
+                </span>
+              </div>
+              {user.abhaNumber && (
+                <div className="p-3 rounded-xl bg-teal-50 border border-teal-100">
+                  <span className="text-[11px] font-semibold text-teal-700 block">ABHA Number</span>
+                  <span className="text-teal-900 font-mono font-bold text-sm tracking-widest block">
+                    {user.abhaNumber}
+                  </span>
+                </div>
+              )}
+              <p className="text-[11px] text-slate-400">
+                Government-verified health identity. Sign in with your ABHA on the login page.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2 text-xs">
+              <p className="text-slate-600">
+                No ABHA linked yet. Sign in with your ABHA (Ayushman Bharat Health Account) on the
+                login page to link it to this profile.
+              </p>
+              <a
+                href="/login"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs transition-all"
+              >
+                <Fingerprint className="w-3.5 h-3.5" />
+                Login with ABHA
+              </a>
+            </div>
+          )}
+        </div>
+
         {/* 1. Medical Background */}
         <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-soft space-y-3">
           <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">

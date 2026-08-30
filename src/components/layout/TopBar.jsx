@@ -1,15 +1,18 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Plus, Bell, Heart, User, Sparkles } from 'lucide-react';
+import { Search, Plus, Bell, Heart, User, Sparkles, ArrowLeftToLine } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useHealth } from '../../context/HealthContext';
 import { useLanguage } from '../../context/LanguageContext';
+import { useFamily } from '../../context/FamilyContext';
 import { LanguageSelector } from '../common/LanguageSelector';
+import { AttendantToggle } from '../common/AttendantToggle';
 
 export const TopBar = ({ onSearchChange, searchQuery = '' }) => {
   const { user } = useAuth();
   const { openAddRecord } = useHealth();
   const { t } = useLanguage();
+  const { displayName, displayRelation, isAttendantView, returnToSelf } = useFamily();
 
   return (
     <header className="sticky top-0 z-20 bg-slate-50/90 backdrop-blur-md border-b border-slate-200/60 px-4 sm:px-8 py-3.5 flex items-center justify-between gap-4">
@@ -50,17 +53,39 @@ export const TopBar = ({ onSearchChange, searchQuery = '' }) => {
           <span>{t.nav.addRecord}</span>
         </button>
 
+        {/* Attendant Toggle (family member switcher) */}
+        <div className="hidden sm:block">
+          <AttendantToggle />
+        </div>
+
+        {/* Return to Self pill — shown while viewing a family member */}
+        {!isAttendantView && displayRelation && (
+          <button
+            type="button"
+            onClick={() => returnToSelf()}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl transition-all"
+            title="Return to your own records"
+          >
+            <ArrowLeftToLine className="w-3.5 h-3.5 text-slate-500" />
+            <span className="hidden lg:inline">Return to Self</span>
+          </button>
+        )}
+
         {/* User Profile Capsule */}
         <Link
           to="/app/profile"
           className="flex items-center gap-2.5 pl-1.5 pr-2.5 py-1 bg-white hover:bg-slate-100 rounded-2xl border border-slate-200/80 transition-all shadow-xs"
         >
           <div className="w-7 h-7 rounded-xl bg-health-100 text-health-800 flex items-center justify-center font-bold text-xs">
-            {user?.name?.charAt(0) || 'R'}
+            {displayName.charAt(0) || user?.name?.charAt(0) || 'R'}
           </div>
           <div className="text-left hidden md:block">
-            <p className="text-xs font-bold text-slate-800 leading-none">{user?.name || 'Rahul Sharma'}</p>
-            <p className="text-[10px] text-slate-400 font-medium mt-0.5">B+ • 32 yrs</p>
+            <p className="text-xs font-bold text-slate-800 leading-none">
+              {displayName || user?.name || 'Rahul Sharma'}
+            </p>
+            <p className="text-[10px] text-slate-400 font-medium mt-0.5">
+              {displayRelation ? `${displayRelation} • viewing profile` : 'B+ • 32 yrs'}
+            </p>
           </div>
         </Link>
       </div>

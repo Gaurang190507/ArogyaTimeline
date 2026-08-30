@@ -6,7 +6,8 @@ The signup form is throwing an alert saying "Supabase is asking you to confirm t
 
 1. Open [https://app.supabase.com](https://app.supabase.com) → your project.
 2. Left sidebar → **SQL Editor** → **New query**.
-3. Open `CRITICAL-FIX.sql` from the project root, copy the whole contents, paste into the editor, click **Run** (or Ctrl+Enter).
+3. Open `supabase-schema.sql` from the project root, copy the whole contents, paste into the editor, click **Run** (or Ctrl+Enter).
+   - This file is fully idempotent (safe to re-run). It creates every table if it doesn't exist, and adds any missing columns to tables created by earlier versions of the schema — so you'll never see `column "date" does not exist` or `column "email" does not exist` errors again.
 4. Left sidebar → **Authentication** → **Providers** → **Email** → turn **OFF** "Confirm email" (it has to be done in the UI, not in SQL).
 5. Refresh the dev server (`Ctrl+C` then `npm run dev` in the project folder).
 

@@ -4,6 +4,7 @@ import { useHealth } from '../../context/HealthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { recordTypeConfig, recordTypesList } from './RecordTypeIcon';
 import { VoiceInput } from '../common/VoiceInput';
+import { DictationButton } from '../common/DictationButton';
 import { 
   Activity, 
   Droplet, 
@@ -36,6 +37,13 @@ export const AddRecordModal = () => {
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [spokenLanguage, setSpokenLanguage] = useState('en');
+
+  // Map spokenLanguage (2-char) → BCP-47 for Web Speech API
+  const dictationLang = {
+    en: 'en-IN', hi: 'hi-IN', ta: 'ta-IN', te: 'te-IN',
+    bn: 'bn-IN', mr: 'mr-IN', gu: 'gu-IN', kn: 'kn-IN',
+    ml: 'ml-IN', pa: 'pa-IN',
+  }[spokenLanguage] || 'en-IN';
 
   // Specific form states
   // BP
@@ -205,6 +213,18 @@ export const AddRecordModal = () => {
         break;
 
       case 'doctor_visit':
+        // Parse prescriptions text into structured medications for Anupana
+        const medsFromText = visitPrescriptions
+          ? visitPrescriptions.split(/[;\n]/).filter(Boolean).map((m) => {
+              const parts = m.trim().split(/\s{2,}|,\s*| - /);
+              return {
+                name: parts[0]?.trim() || m.trim(),
+                dosage: parts[1] || '',
+                anupana: parts[2] || '',
+                timing: parts[3] || '',
+              };
+            })
+          : [{ name: visitDiagnosis || 'General review', dosage: 'as directed', anupana: 'after meals', timing: 'twice daily' }];
         await addRecord({
           type: 'doctor_visit',
           title: `Consultation with ${doctorName}`,
@@ -216,6 +236,9 @@ export const AddRecordModal = () => {
             hospital,
             diagnosis: visitDiagnosis,
             prescriptions: visitPrescriptions ? [visitPrescriptions] : [],
+            medications: medsFromText,
+            pathya: ['Warm water', 'Light meals', 'Regular walking'],
+            apathya: ['Spicy food', 'Cold drinks', 'Late-night meals'],
             notes
           }
         });
@@ -576,13 +599,43 @@ export const AddRecordModal = () => {
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">Diagnosis by Doctor</label>
-              <input
-                type="text"
-                value={visitDiagnosis}
-                onChange={(e) => setVisitDiagnosis(e.target.value)}
-                placeholder="e.g. Mild Gastritis, Seasonal Allergy"
-                className="w-full px-3 py-2 bg-white border border-cyan-200 rounded-xl text-sm font-medium"
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  value={visitDiagnosis}
+                  onChange={(e) => setVisitDiagnosis(e.target.value)}
+                  placeholder="e.g. Mild Gastritis, Seasonal Allergy (tap mic to dictate)"
+                  className="w-full pr-9 pl-3 py-2 bg-white border border-cyan-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-cyan-400"
+                />
+                <DictationButton
+                  onTranscript={(txt) => {
+                    if (txt && !txt.startsWith('[Transcription error')) setVisitDiagnosis(txt);
+                  }}
+                  spokenLanguage={dictationLang}
+                  className="absolute right-2 top-1/2 -translate-y-1/2"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Prescriptions / Case Notes</label>
+              <div className="relative">
+                <textarea
+                  value={visitPrescriptions}
+                  onChange={(e) => setVisitPrescriptions(e.target.value)}
+                  rows="3"
+                  placeholder="Dictate medications, dosage, anupana (with-food/empty), pathya & apathya advice..."
+                  className="w-full pr-9 pl-3 py-2 bg-white border border-cyan-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-cyan-400 resize-none"
+                />
+                <DictationButton
+                  onTranscript={(txt) => {
+                    if (txt && !txt.startsWith('[Transcription error')) {
+                      setVisitPrescriptions(txt);
+                    }
+                  }}
+                  spokenLanguage={dictationLang}
+                  className="absolute right-2 top-2"
+                />
+              </div>
             </div>
           </div>
         )}

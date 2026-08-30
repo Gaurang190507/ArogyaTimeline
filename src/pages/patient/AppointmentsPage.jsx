@@ -14,9 +14,13 @@ import {
 import { useHealth } from '../../context/HealthContext';
 import { Modal } from '../../components/common/Modal';
 import { ConfirmationDialog } from '../../components/common/ConfirmationDialog';
+import { AnupanaCard } from '../../components/common/AnupanaCard';
 
 export const AppointmentsPage = () => {
-  const { appointments, addAppointment, cancelAppointment } = useHealth();
+  const { appointments, addAppointment, cancelAppointment, records } = useHealth();
+
+  // Find doctor_visit records that correspond to past appointments
+  const doctorVisitRecords = records.filter(r => r.type === 'doctor_visit' || r.metadata?.doctorName);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedAptToCancel, setSelectedAptToCancel] = useState(null);
 
@@ -140,23 +144,34 @@ export const AppointmentsPage = () => {
         </h3>
 
         <div className="space-y-3">
-          {pastAppointments.map((apt) => (
-            <div key={apt.id} className="bg-white rounded-2xl p-4 border border-slate-100 shadow-xs flex items-center justify-between flex-wrap gap-3">
-              <div className="space-y-0.5">
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-slate-800 text-sm">{apt.doctorName}</span>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
-                    apt.status === 'Cancelled' ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-600'
-                  }`}>
-                    {apt.status}
-                  </span>
+          {pastAppointments.map((apt) => {
+            // Match this appointment to a doctor_visit record (by doctor name + date)
+            const matchedRecord = doctorVisitRecords.find(
+              r => (r.metadata?.doctorName === apt.doctorName || r.title?.includes(apt.doctorName)) &&
+                   (r.date === apt.date || r.metadata?.diagnosis)
+            );
+            return (
+              <div key={apt.id} className="bg-white rounded-2xl p-4 border border-slate-100 shadow-xs flex items-center justify-between flex-wrap gap-3">
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-slate-800 text-sm">{apt.doctorName}</span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                      apt.status === 'Cancelled' ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-600'
+                    }`}>
+                      {apt.status}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400">{apt.hospital} • {apt.date}</p>
                 </div>
-                <p className="text-xs text-slate-400">{apt.hospital} • {apt.date}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-xs text-slate-600 italic">{apt.purpose}</p>
+                  {matchedRecord && apt.status !== 'Cancelled' && (
+                    <AnupanaCard record={matchedRecord} compact={true} />
+                  )}
+                </div>
               </div>
-
-              <p className="text-xs text-slate-600 italic">{apt.purpose}</p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 

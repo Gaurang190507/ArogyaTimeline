@@ -133,7 +133,7 @@ export const documentService = {
       thumbnail: newDoc.thumbnail || 'https://images.unsplash.com/photo-1581595220892-b0739db3ba8c?w=300&auto=format&fit=crop&q=80',
       doctor: newDoc.doctor,
       hospital: newDoc.hospital,
-      report_date: newDoc.reportDate || new Date().toISOString().split('T')[0],
+      report_date: newDoc.reportDate || newDoc.date || new Date().toISOString().split('T')[0],
       ai_summary: newDoc.aiSummary || newDoc.summary,
       extracted_metadata: newDoc.extracted || {},
     };

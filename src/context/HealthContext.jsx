@@ -4,10 +4,15 @@ import { documentService } from '../services/documentService';
 import { doctorService } from '../services/doctorService';
 import { appointmentService } from '../services/appointmentService';
 import { reminderService } from '../services/reminderService';
+import { useAuth } from './AuthContext';
 
 const HealthContext = createContext();
 
 export const HealthProvider = ({ children }) => {
+  const { user, isAuthenticated } = useAuth();
+  // We DO NOT filter by `activeMember` client-side anymore. The
+  // family member's data is naturally scoped by RLS (auth.uid() =
+  // their own user id when we sign in as them).
   const [records, setRecords] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [doctors, setDoctors] = useState([]);
@@ -46,6 +51,16 @@ export const HealthProvider = ({ children }) => {
   const closeToast = () => setToast(null);
 
   const refreshAll = useCallback(async () => {
+    if (!isAuthenticated || !user?.id) {
+      // No session — clear all data
+      setRecords([]);
+      setDocuments([]);
+      setDoctors([]);
+      setAppointments([]);
+      setReminders([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const [recs, docs, docsList, apts, rems] = await Promise.all([
@@ -56,7 +71,8 @@ export const HealthProvider = ({ children }) => {
         reminderService.getAllReminders(),
       ]);
       // Compute stats from the records we just fetched — avoids a second getAllRecords() call
-      const newStats = healthRecordService.getStats(recs);
+      const newStats = await healthRecordService.getStats(recs);
+
       setRecords(recs);
       setDocuments(docs);
       setDoctors(docsList);
@@ -68,8 +84,9 @@ export const HealthProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user?.id, isAuthenticated]);
 
+  // Re-fetch whenever the auth user changes (login, switch-to-member, return-to-self)
   useEffect(() => {
     refreshAll();
   }, [refreshAll]);
@@ -118,7 +135,7 @@ export const HealthProvider = ({ children }) => {
         doctorName: docData.doctor,
         facility: docData.hospital,
         fileUrl: created.fileUrl,
-        extractedSummary: docData.summary
+        extractedSummary: docData.summary,
       }
     });
     await refreshAll();

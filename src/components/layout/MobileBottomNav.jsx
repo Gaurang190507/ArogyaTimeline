@@ -43,7 +43,7 @@ export const MobileBottomNav = () => {
             type="button"
             onClick={() => openAddRecord('blood_pressure')}
             aria-label="Add Record"
-            className="w-13 h-13 w-12 h-12 rounded-full bg-gradient-to-tr from-health-600 to-teal-500 text-white flex items-center justify-center shadow-lg shadow-health-600/40 hover:scale-105 active:scale-95 transition-all ring-4 ring-slate-50"
+            className="w-12 h-12 rounded-full bg-gradient-to-tr from-health-600 to-teal-500 text-white flex items-center justify-center shadow-lg shadow-health-600/40 hover:scale-105 active:scale-95 transition-all ring-4 ring-slate-50"
           >
             <Plus className="w-6 h-6 stroke-[2.5]" />
           </button>

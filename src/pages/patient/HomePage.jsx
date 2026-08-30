@@ -24,6 +24,7 @@ import { useHealth } from '../../context/HealthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { VoiceInput } from '../../components/common/VoiceInput';
 import { RecordCard } from '../../components/records/RecordCard';
+import { AnupanaCard } from '../../components/common/AnupanaCard';
 import { MetricCard } from '../../components/common/MetricCard';
 import { EmptyState } from '../../components/common/EmptyState';
 
@@ -35,7 +36,7 @@ export const HomePage = () => {
 
   // Today's records (match today's date)
   const todayStr = new Date().toISOString().split('T')[0];
-  const todaysRecords = records.filter(r => r.date === '2026-08-28' || r.date === todayStr);
+  const todaysRecords = records.filter(r => r.date === todayStr);
 
   const quickRecordOptions = [
     { type: 'blood_pressure', label: 'Blood Pressure', emoji: '🩸', icon: Activity, color: 'bg-rose-50 text-rose-700 hover:bg-rose-100 border-rose-200' },
@@ -44,6 +45,7 @@ export const HomePage = () => {
     { type: 'temperature', label: 'Temperature', emoji: '🌡️', icon: Thermometer, color: 'bg-pink-50 text-pink-700 hover:bg-pink-100 border-pink-200' },
     { type: 'medicine', label: 'Medicine', emoji: '💊', icon: Pill, color: 'bg-purple-50 text-purple-700 hover:bg-purple-100 border-purple-200' },
     { type: 'symptom', label: 'Symptom', emoji: '🤒', icon: AlertCircle, color: 'bg-orange-50 text-orange-700 hover:bg-orange-100 border-orange-200' },
+    { type: 'doctor_visit', label: 'Doctor Visit', emoji: '🩺', icon: Stethoscope, color: 'bg-cyan-50 text-cyan-700 hover:bg-cyan-100 border-cyan-200' },
     { type: 'note', label: 'Note', emoji: '📝', icon: StickyNote, color: 'bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-300' }
   ];
 
@@ -256,7 +258,57 @@ export const HomePage = () => {
         </div>
       </div>
 
-      {/* 5. Health Story Banner */}
+      {/* 5. Anupana Voice Explainer Card for latest doctor visit */}
+      {(() => {
+        const doctorVisits = records.filter(r => r.type === 'doctor_visit');
+        if (doctorVisits.length > 0) {
+          return (
+            <div className="space-y-3">
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                Voice Prescription Assistant
+              </h3>
+              <AnupanaCard record={doctorVisits[0]} />
+            </div>
+          );
+        }
+        // Empty state: no doctor visits yet
+        return (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                Voice Prescription Assistant
+              </h3>
+              <button
+                onClick={() => openAddRecord('doctor_visit')}
+                className="text-xs font-bold text-cyan-600 hover:text-cyan-800 flex items-center gap-1"
+              >
+                + Log a consultation
+              </button>
+            </div>
+            <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-soft text-center">
+              <div className="flex items-center justify-center gap-2 text-slate-500 mb-2">
+                <Stethoscope className="w-5 h-5 text-slate-300" />
+                <span className="text-xs font-semibold">No doctor visits logged yet</span>
+              </div>
+              <p className="text-[11px] text-slate-400 mb-3 max-w-md mx-auto">
+                Log a consultation to unlock your Anupana voice prescription explainer —
+                dosage, with-food/empty-stomach timing, and dietary do's & don'ts read
+                aloud in your language.
+              </p>
+              <button
+                onClick={() => openAddRecord('doctor_visit')}
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-bold rounded-xl transition-all"
+              >
+                <Plus className="w-3 h-3" />
+                Log Doctor Visit
+              </button>
+            </div>
+          </div>
+        );
+      })()}
+
+
+      {/* 6. Health Story Banner */}
       <div className="bg-gradient-to-r from-health-900 via-teal-900 to-slate-900 rounded-3xl p-6 sm:p-8 text-white flex flex-col sm:flex-row items-center justify-between gap-6 shadow-soft-lg relative overflow-hidden">
         <div className="space-y-2 text-center sm:text-left z-10">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-teal-200 text-xs font-semibold backdrop-blur-sm">

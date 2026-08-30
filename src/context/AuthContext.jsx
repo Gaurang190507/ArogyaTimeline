@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { authService } from '../services/authService';
+import { supabase } from '../services/supabaseClient';
 
 const AuthContext = createContext();
 
@@ -60,6 +61,20 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+  const abhaLogin = useCallback(async (abhaAddress, otp, transactionId) => {
+    setLoading(true);
+    try {
+      const loggedUser = await authService.abhaLogin(abhaAddress, otp, transactionId);
+      const userSession = await authService.getSession();
+      setUser(loggedUser);
+      setSession(userSession);
+      setIsAuthenticated(true);
+      return loggedUser;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const signup = useCallback(async (profileData) => {
     setLoading(true);
     try {
@@ -85,6 +100,77 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setSession(null);
     setIsAuthenticated(false);
+    // Clear any saved attendant session
+    try { sessionStorage.removeItem('attendant_session'); } catch (_) {}
+  }, []);
+
+  // ─── Family-member session switching ─────────────────────────
+  // Before switching to a family member we persist the current
+  // (attendant's) session so we can restore it later without
+  // requiring the attendant to re-type their own password.
+
+  const switchToMember = useCallback(async (email, password) => {
+    setLoading(true);
+    try {
+      // Save the current (attendant) session to sessionStorage
+      const currentSession = await authService.getSession();
+      if (currentSession?.access_token) {
+        try {
+          sessionStorage.setItem('attendant_session', JSON.stringify({
+            access_token: currentSession.access_token,
+            refresh_token: currentSession.refresh_token,
+          }));
+        } catch (_) { /* sessionStorage unavailable — degraded mode */ }
+      }
+
+      // Sign in as the family member (password-gated)
+      await authService.switchToMember(email, password);
+
+      // The onAuthStateChange listener will fire and update user/session
+      const newSession = await authService.getSession();
+      if (newSession?.user) {
+        const profile = await authService.getCurrentUser();
+        setUser(profile);
+        setSession(newSession);
+        setIsAuthenticated(true);
+      }
+      return true;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const returnToAttendant = useCallback(async () => {
+    setLoading(true);
+    try {
+      const saved = sessionStorage.getItem('attendant_session');
+      if (!saved) {
+        throw new Error('No saved attendant session — you may need to log in again.');
+      }
+      const { access_token, refresh_token } = JSON.parse(saved);
+
+      // Restore the attendant's session
+      const { error } = await supabase.auth.setSession({
+        access_token,
+        refresh_token,
+      });
+      if (error) throw error;
+
+      // Clear the saved session
+      try { sessionStorage.removeItem('attendant_session'); } catch (_) {}
+
+      // Update context
+      const restoredSession = await authService.getSession();
+      if (restoredSession?.user) {
+        const profile = await authService.getCurrentUser();
+        setUser(profile);
+        setSession(restoredSession);
+        setIsAuthenticated(true);
+      }
+      return true;
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   return (
@@ -94,9 +180,12 @@ export const AuthProvider = ({ children }) => {
       isAuthenticated,
       loading,
       login,
+      abhaLogin,
       signup,
       updateUserProfile,
-      logout
+      logout,
+      switchToMember,
+      returnToAttendant
     }}>
       {children}
     </AuthContext.Provider>
