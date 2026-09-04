@@ -23,10 +23,11 @@ export const CalendarPage = () => {
   const { records, openAddRecord } = useHealth();
   const { t } = useLanguage();
 
-  // Calendar view state — default to August 2026 (matching demo dataset)
-  const [currentYear, setCurrentYear] = useState(2026);
-  const [currentMonth, setCurrentMonth] = useState(7); // 0-indexed: 7 is August
-  const [selectedDate, setSelectedDate] = useState('2026-08-28');
+  // Calendar view state — default to active current date
+  const today = new Date();
+  const [currentYear, setCurrentYear] = useState(today.getFullYear());
+  const [currentMonth, setCurrentMonth] = useState(today.getMonth());
+  const [selectedDate, setSelectedDate] = useState(today.toISOString().split('T')[0]);
 
   const monthNames = [
     "January", "February", "March", "April", "May", "June",

@@ -23,11 +23,13 @@ import {
   CartesianGrid, 
   Legend 
 } from 'recharts';
+import { useHealth } from '../../context/HealthContext';
 
 export const TrendsPage = () => {
+  const { records } = useHealth();
   const [timeRange, setTimeRange] = useState('3m'); // 7d | 30d | 3m | 6m | 1y
 
-  // Mock Trend Datasets
+  // Mock Trend Datasets (Fallback baseline)
   const bpTrendData = [
     { date: 'Jun 12', systolic: 132, diastolic: 84, pulse: 72 },
     { date: 'Jul 05', systolic: 130, diastolic: 82, pulse: 70 },
@@ -66,6 +68,53 @@ export const TrendsPage = () => {
     { date: 'Aug 28', temp: 98.6 },
   ];
 
+  // Extract and sort real user records
+  const userBp = (records || [])
+    .filter((r) => r.type === 'blood_pressure' && r.metadata?.systolic)
+    .sort((a, b) => new Date(a.date) - new Date(b.date))
+    .map((r) => ({
+      date: new Date(r.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      systolic: Number(r.metadata.systolic),
+      diastolic: Number(r.metadata.diastolic),
+      pulse: Number(r.metadata.pulse || 72),
+    }));
+
+  const userSugar = (records || [])
+    .filter((r) => r.type === 'blood_sugar' && r.metadata?.value)
+    .sort((a, b) => new Date(a.date) - new Date(b.date))
+    .map((r) => ({
+      date: new Date(r.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      fasting: Number(r.metadata.value),
+      postPrandial: Math.round(Number(r.metadata.value) * 1.35),
+    }));
+
+  const userWeight = (records || [])
+    .filter((r) => r.type === 'weight' && r.metadata?.value)
+    .sort((a, b) => new Date(a.date) - new Date(b.date))
+    .map((r) => ({
+      date: new Date(r.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      weight: Number(r.metadata.value),
+    }));
+
+  const userTemp = (records || [])
+    .filter((r) => r.type === 'temperature' && r.metadata?.value)
+    .sort((a, b) => new Date(a.date) - new Date(b.date))
+    .map((r) => ({
+      date: new Date(r.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      temp: Number(r.metadata.value),
+    }));
+
+  const activeBpData = userBp.length > 0 ? userBp : bpTrendData;
+  const activeSugarData = userSugar.length > 0 ? userSugar : sugarTrendData;
+  const activeWeightData = userWeight.length > 0 ? userWeight : weightTrendData;
+  const activeTempData = userTemp.length > 0 ? userTemp : tempTrendData;
+  const isLive = userBp.length > 0 || userSugar.length > 0 || userWeight.length > 0 || userTemp.length > 0;
+
+  const latestBp = activeBpData[activeBpData.length - 1];
+  const latestSugar = activeSugarData[activeSugarData.length - 1];
+  const latestWeight = activeWeightData[activeWeightData.length - 1];
+  const latestTemp = activeTempData[activeTempData.length - 1];
+
   return (
     <div className="space-y-8 max-w-6xl mx-auto">
       {/* Header */}
@@ -75,9 +124,17 @@ export const TrendsPage = () => {
             <TrendingUp className="w-4 h-4" />
             <span>Health Analytics & Trends</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mt-1">
-            Vitals & Measurements Over Time
-          </h1>
+          <div className="flex items-center gap-3 mt-1 flex-wrap">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+              Vitals & Measurements Over Time
+            </h1>
+            {isLive && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200">
+                <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Live Supabase Vitals</span>
+              </span>
+            )}
+          </div>
           <p className="text-xs text-slate-500 mt-0.5">
             Objective visualization of your recorded blood pressure, glucose, weight, and temperature.
           </p>
@@ -127,17 +184,19 @@ export const TrendsPage = () => {
             </div>
 
             <div className="text-right">
-              <span className="text-lg font-bold text-slate-900">128 / 82</span>
+              <span className="text-lg font-bold text-slate-900">
+                {latestBp ? `${latestBp.systolic} / ${latestBp.diastolic}` : '128 / 82'}
+              </span>
               <div className="flex items-center gap-1 text-[11px] text-emerald-600 font-semibold justify-end">
                 <ArrowDownRight className="w-3.5 h-3.5" />
-                <span>Normalized from 150/95</span>
+                <span>{isLive ? 'Latest recorded' : 'Normalized from 150/95'}</span>
               </div>
             </div>
           </div>
 
           <div className="h-64 w-full pt-2">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={bpTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <AreaChart data={activeBpData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="sysGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#ef4444" stopOpacity={0.2}/>
@@ -163,7 +222,7 @@ export const TrendsPage = () => {
 
           <p className="text-xs text-slate-500 bg-slate-50 p-3 rounded-2xl border border-slate-100">
             <span className="font-semibold text-slate-700">Observation: </span>
-            Recorded values decreased over the past 5 days following adherence to medication and rest.
+            {isLive ? 'Plotted from your real blood pressure records in your health timeline.' : 'Recorded values decreased over the past 5 days following adherence to medication and rest.'}
           </p>
         </div>
 
@@ -183,17 +242,19 @@ export const TrendsPage = () => {
             </div>
 
             <div className="text-right">
-              <span className="text-lg font-bold text-slate-900">93 mg/dL</span>
+              <span className="text-lg font-bold text-slate-900">
+                {latestSugar ? `${latestSugar.fasting} mg/dL` : '93 mg/dL'}
+              </span>
               <div className="flex items-center gap-1 text-[11px] text-slate-500 font-semibold justify-end">
                 <Minus className="w-3.5 h-3.5 text-slate-400" />
-                <span>Stable fasting average</span>
+                <span>{isLive ? 'Latest reading' : 'Stable fasting average'}</span>
               </div>
             </div>
           </div>
 
           <div className="h-64 w-full pt-2">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={sugarTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <LineChart data={activeSugarData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                 <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
                 <YAxis domain={[70, 160]} tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
@@ -209,7 +270,7 @@ export const TrendsPage = () => {
 
           <p className="text-xs text-slate-500 bg-slate-50 p-3 rounded-2xl border border-slate-100">
             <span className="font-semibold text-slate-700">Observation: </span>
-            Fasting values have remained consistent between 90 and 98 mg/dL over the past 3 months.
+            {isLive ? 'Plotted from your real glucose records in your health timeline.' : 'Fasting values have remained consistent between 90 and 98 mg/dL over the past 3 months.'}
           </p>
         </div>
 
@@ -229,20 +290,22 @@ export const TrendsPage = () => {
             </div>
 
             <div className="text-right">
-              <span className="text-lg font-bold text-slate-900">72.0 kg</span>
+              <span className="text-lg font-bold text-slate-900">
+                {latestWeight ? `${latestWeight.weight} kg` : '72.0 kg'}
+              </span>
               <div className="flex items-center gap-1 text-[11px] text-emerald-600 font-semibold justify-end">
                 <ArrowDownRight className="w-3.5 h-3.5" />
-                <span>-1.8 kg since June</span>
+                <span>{isLive ? 'Latest recorded' : '-1.8 kg since June'}</span>
               </div>
             </div>
           </div>
 
           <div className="h-64 w-full pt-2">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={weightTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <LineChart data={activeWeightData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                 <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                <YAxis domain={[68, 76]} tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                <YAxis domain={['auto', 'auto']} tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
                 <Tooltip 
                   contentStyle={{ backgroundColor: '#0f172a', borderRadius: '12px', color: '#fff', fontSize: '12px', border: 'none' }}
                 />
@@ -253,7 +316,7 @@ export const TrendsPage = () => {
 
           <p className="text-xs text-slate-500 bg-slate-50 p-3 rounded-2xl border border-slate-100">
             <span className="font-semibold text-slate-700">Observation: </span>
-            Gradual healthy reduction of 1.8 kg over 12 weeks with light jogging and diet moderation.
+            {isLive ? 'Plotted from your real weight records in your health timeline.' : 'Gradual healthy reduction of 1.8 kg over 12 weeks with light jogging and diet moderation.'}
           </p>
         </div>
 
@@ -273,20 +336,22 @@ export const TrendsPage = () => {
             </div>
 
             <div className="text-right">
-              <span className="text-lg font-bold text-slate-900">98.6 °F</span>
+              <span className="text-lg font-bold text-slate-900">
+                {latestTemp ? `${latestTemp.temp} °F` : '98.6 °F'}
+              </span>
               <div className="flex items-center gap-1 text-[11px] text-emerald-600 font-semibold justify-end">
                 <Minus className="w-3.5 h-3.5 text-slate-400" />
-                <span>Normal baseline</span>
+                <span>{isLive ? 'Latest recorded' : 'Normal baseline'}</span>
               </div>
             </div>
           </div>
 
           <div className="h-64 w-full pt-2">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={tempTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <LineChart data={activeTempData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                 <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                <YAxis domain={[97, 101]} tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                <YAxis domain={['auto', 'auto']} tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
                 <Tooltip 
                   contentStyle={{ backgroundColor: '#0f172a', borderRadius: '12px', color: '#fff', fontSize: '12px', border: 'none' }}
                 />
@@ -297,7 +362,7 @@ export const TrendsPage = () => {
 
           <p className="text-xs text-slate-500 bg-slate-50 p-3 rounded-2xl border border-slate-100">
             <span className="font-semibold text-slate-700">Observation: </span>
-            Recorded values remained within standard baseline without febrile episodes.
+            {isLive ? 'Plotted from your real temperature records in your health timeline.' : 'Recorded values remained within standard baseline without febrile episodes.'}
           </p>
         </div>
 

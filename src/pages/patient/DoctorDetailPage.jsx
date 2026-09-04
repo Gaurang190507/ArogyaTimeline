@@ -26,21 +26,52 @@ export const DoctorDetailPage = () => {
   const { id } = useParams();
   const { doctors, records, documents, openAddRecord } = useHealth();
 
-  const doctor = doctors.find((d) => d.id === id) || doctors[0];
+  const doctor = doctors.find((d) => d.id === id) || (doctors.length > 0 ? doctors[0] : null);
+
+  if (!doctor) {
+    return (
+      <div className="space-y-6 max-w-5xl mx-auto">
+        <Link
+          to="/app/doctors"
+          className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-900"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Back to All Doctors</span>
+        </Link>
+        <div className="bg-white rounded-3xl p-12 border border-slate-100 shadow-soft text-center space-y-3">
+          <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-500 flex items-center justify-center mx-auto">
+            <Stethoscope className="w-6 h-6" />
+          </div>
+          <h2 className="text-base font-bold text-slate-800">Doctor Profile Not Found</h2>
+          <p className="text-xs text-slate-500 max-w-sm mx-auto">
+            This doctor may have been removed or has not been added to your care team yet.
+          </p>
+          <div className="pt-2">
+            <Link
+              to="/app/doctors"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all"
+            >
+              <span>View Care Team</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Records related to this doctor
   const doctorVisits = records.filter(
     (r) =>
       r.type === "doctor_visit" &&
       (r.metadata?.doctorId === doctor.id ||
-        r.metadata?.doctorName?.includes(doctor.name.replace("Dr. ", ""))),
+        r.metadata?.doctorName?.toLowerCase().includes((doctor.name || "").toLowerCase().replace("dr. ", ""))),
   );
 
   // Documents associated with this doctor
   const associatedDocs = documents.filter((d) =>
     d.doctor
       ?.toLowerCase()
-      .includes(doctor.name.toLowerCase().replace("dr. ", "")),
+      .includes((doctor.name || "").toLowerCase().replace("dr. ", "")),
   );
 
   return (

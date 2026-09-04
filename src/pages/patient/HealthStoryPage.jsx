@@ -92,7 +92,9 @@ export const HealthStoryPage = () => {
           <div className="w-10 h-10 rounded-2xl bg-cyan-50 text-cyan-700 flex items-center justify-center mx-auto mb-2">
             <Stethoscope className="w-5 h-5" />
           </div>
-          <h3 className="text-2xl font-bold text-slate-900">3</h3>
+          <h3 className="text-2xl font-bold text-slate-900">
+            {stats?.doctorVisitsCount ?? records.filter(r => r.type === 'doctor_visit').length}
+          </h3>
           <p className="text-xs font-medium text-slate-500">Doctor Visits</p>
         </div>
 
@@ -100,7 +102,9 @@ export const HealthStoryPage = () => {
           <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center mx-auto mb-2">
             <FileText className="w-5 h-5" />
           </div>
-          <h3 className="text-2xl font-bold text-slate-900">5</h3>
+          <h3 className="text-2xl font-bold text-slate-900">
+            {stats?.documentsCount ?? records.filter(r => r.type === 'document').length}
+          </h3>
           <p className="text-xs font-medium text-slate-500">Documents</p>
         </div>
 
@@ -108,7 +112,9 @@ export const HealthStoryPage = () => {
           <div className="w-10 h-10 rounded-2xl bg-rose-50 text-rose-700 flex items-center justify-center mx-auto mb-2">
             <Activity className="w-5 h-5" />
           </div>
-          <h3 className="text-2xl font-bold text-slate-900">52</h3>
+          <h3 className="text-2xl font-bold text-slate-900">
+            {records.filter(r => ['blood_pressure', 'blood_sugar', 'weight', 'temperature', 'vitals'].includes(r.type)).length}
+          </h3>
           <p className="text-xs font-medium text-slate-500">Recorded Vitals</p>
         </div>
 
@@ -116,7 +122,9 @@ export const HealthStoryPage = () => {
           <div className="w-10 h-10 rounded-2xl bg-orange-50 text-orange-700 flex items-center justify-center mx-auto mb-2">
             <AlertCircle className="w-5 h-5" />
           </div>
-          <h3 className="text-2xl font-bold text-slate-900">7</h3>
+          <h3 className="text-2xl font-bold text-slate-900">
+            {records.filter(r => r.type === 'symptom').length}
+          </h3>
           <p className="text-xs font-medium text-slate-500">Symptoms</p>
         </div>
 
@@ -124,7 +132,9 @@ export const HealthStoryPage = () => {
           <div className="w-10 h-10 rounded-2xl bg-purple-50 text-purple-700 flex items-center justify-center mx-auto mb-2">
             <Pill className="w-5 h-5" />
           </div>
-          <h3 className="text-2xl font-bold text-slate-900">4</h3>
+          <h3 className="text-2xl font-bold text-slate-900">
+            {stats?.activeMedicinesCount ?? records.filter(r => r.type === 'medicine').length}
+          </h3>
           <p className="text-xs font-medium text-slate-500">Medicines</p>
         </div>
       </div>

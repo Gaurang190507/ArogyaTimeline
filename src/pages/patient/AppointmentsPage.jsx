@@ -27,7 +27,7 @@ export const AppointmentsPage = () => {
   // Form states
   const [doctorName, setDoctorName] = useState('Dr. Sharma');
   const [hospital, setHospital] = useState('ABC Hospital, Indiranagar');
-  const [date, setDate] = useState('2026-09-10');
+  const [date, setDate] = useState(() => new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0]);
   const [time, setTime] = useState('10:30 AM');
   const [purpose, setPurpose] = useState('Follow-up consultation');
 

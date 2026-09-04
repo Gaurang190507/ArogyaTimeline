@@ -25,12 +25,23 @@ export const ProfilePage = () => {
   const [isEditing, setIsEditing] = useState(false);
 
   // Form states
-  const [name, setName] = useState(user?.name || 'Rahul Sharma');
-  const [phone, setPhone] = useState(user?.phone || '+91 98765 43210');
+  const [name, setName] = useState(user?.name || 'User');
+  const [phone, setPhone] = useState(user?.phone || '');
   const [height, setHeight] = useState(user?.height || 172);
   const [weight, setWeight] = useState(user?.weight || 72);
   const [bloodGroup, setBloodGroup] = useState(user?.bloodGroup || 'B+');
-  const [personalNotes, setPersonalNotes] = useState(user?.personalNotes || "I usually get headaches when I don't sleep properly.");
+  const [personalNotes, setPersonalNotes] = useState(user?.personalNotes || "");
+
+  const ageDisplay = (() => {
+    if (user?.dateOfBirth) {
+      const birth = new Date(user.dateOfBirth);
+      const diff = Date.now() - birth.getTime();
+      const age = Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25));
+      if (!Number.isNaN(age) && age > 0) return `${age} yrs`;
+    }
+    return user?.age ? `${user.age} yrs` : 'Age not set';
+  })();
+  const genderDisplay = user?.sex || user?.genderIdentity || 'Patient';
 
   const handleSave = async () => {
     await updateUserProfile({
@@ -51,17 +62,17 @@ export const ProfilePage = () => {
       <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-100 shadow-soft flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-gradient-to-tr from-health-600 to-teal-500 text-white flex items-center justify-center font-black text-2xl shadow-md shadow-health-600/25 shrink-0">
-            {name.charAt(0)}
+            {name.charAt(0) || 'U'}
           </div>
           <div>
             <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">{name}</h1>
-            <p className="text-xs sm:text-sm text-slate-500 font-medium">{user?.email || 'demo@example.com'} • {phone}</p>
+            <p className="text-xs sm:text-sm text-slate-500 font-medium">{user?.email || 'patient@example.com'}{phone ? ` • ${phone}` : ''}</p>
             <div className="flex items-center gap-2 mt-2 flex-wrap text-xs">
               <span className="bg-rose-50 text-rose-700 font-bold px-2.5 py-0.5 rounded-lg border border-rose-200">
                 Blood: {bloodGroup}
               </span>
               <span className="bg-slate-100 text-slate-700 font-medium px-2.5 py-0.5 rounded-lg">
-                32 yrs (Male)
+                {ageDisplay} ({genderDisplay})
               </span>
               <span className="bg-slate-100 text-slate-700 font-medium px-2.5 py-0.5 rounded-lg">
                 {height} cm • {weight} kg

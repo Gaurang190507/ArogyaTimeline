@@ -19,6 +19,7 @@ export const DocumentDigitizationModal = ({ isOpen, onClose }) => {
 
   const [step, setStep] = useState(1); // 1: Select/Upload, 2: Reading, 3: Extracting, 4: Review
   const [selectedFile, setSelectedFile] = useState(null);
+  const [selectedFileObj, setSelectedFileObj] = useState(null);
   const [docCategory, setDocCategory] = useState('Reports');
   const [extractedData, setExtractedData] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -34,11 +35,13 @@ export const DocumentDigitizationModal = ({ isOpen, onClose }) => {
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0];
     if (file) {
+      setSelectedFileObj(file);
       startDigitizationWorkflow(file.name);
     }
   };
 
   const handleSampleSelect = (sampleName, category) => {
+    setSelectedFileObj(null);
     setDocCategory(category);
     startDigitizationWorkflow(sampleName);
   };
@@ -78,6 +81,7 @@ export const DocumentDigitizationModal = ({ isOpen, onClose }) => {
       doctor,
       hospital,
       summary: aiSummary,
+      file: selectedFileObj,
       extractedData: {
         reportDate,
         doctor,
@@ -93,6 +97,7 @@ export const DocumentDigitizationModal = ({ isOpen, onClose }) => {
   const handleClose = () => {
     setStep(1);
     setSelectedFile(null);
+    setSelectedFileObj(null);
     setExtractedData(null);
     setIsEditing(false);
     onClose();

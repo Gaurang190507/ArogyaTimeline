@@ -23,7 +23,7 @@ export const RemindersPage = () => {
   // Form states
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('Medicine');
-  const [date, setDate] = useState('2026-08-28');
+  const [date, setDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [time, setTime] = useState('08:00 AM');
   const [repeat, setRepeat] = useState('Daily');
   const [notes, setNotes] = useState('');

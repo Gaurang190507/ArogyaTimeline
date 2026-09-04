@@ -23,7 +23,7 @@ export const TimelinePage = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all'); // all | vitals | symptom | medicine | doctor_visit | document | note
-  const [dateRange, setDateRange] = useState('3m'); // 7d | 30d | 3m | 6m | 1y | all
+  const [dateRange, setDateRange] = useState('all'); // 7d | 30d | 3m | 6m | 1y | all
 
   const filterTabs = [
     { key: 'all', label: 'All Events', icon: null },
@@ -37,15 +37,29 @@ export const TimelinePage = () => {
 
   // Filtering & Grouping logic
   const filteredRecords = useMemo(() => {
+    const now = new Date();
+    let cutoff = null;
+    if (dateRange === '7d') cutoff = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    else if (dateRange === '30d') cutoff = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    else if (dateRange === '3m') cutoff = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+    else if (dateRange === '6m') cutoff = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
+    else if (dateRange === '1y') cutoff = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+
     return records.filter((r) => {
-      // 1. Category filter
+      // 1. Date range filter
+      if (cutoff && r.date) {
+        const rDate = new Date(r.date);
+        if (rDate < cutoff) return false;
+      }
+
+      // 2. Category filter
       if (selectedFilter === 'vitals') {
         if (!['blood_pressure', 'blood_sugar', 'weight', 'temperature'].includes(r.type)) return false;
       } else if (selectedFilter !== 'all' && r.type !== selectedFilter) {
         return false;
       }
 
-      // 2. Search query
+      // 3. Search query
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const matchTitle = r.title?.toLowerCase().includes(q);
@@ -57,7 +71,7 @@ export const TimelinePage = () => {
 
       return true;
     });
-  }, [records, selectedFilter, searchQuery]);
+  }, [records, selectedFilter, searchQuery, dateRange]);
 
   // Group records by Month Year (e.g. "August 2026", "July 2026")
   const groupedByMonth = useMemo(() => {
