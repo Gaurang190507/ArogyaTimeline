@@ -173,12 +173,24 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+  const switchRole = useCallback((newRole) => {
+    const validRole = newRole === 'doctor' ? 'doctor' : 'patient';
+    localStorage.setItem('user_active_role', validRole);
+    setUser((prev) => (prev ? { ...prev, role: validRole } : { role: validRole }));
+  }, []);
+
+  const role = user?.role || 'patient';
+  const isDoctor = role === 'doctor';
+
   return (
     <AuthContext.Provider value={{
       user,
       session,
       isAuthenticated,
       loading,
+      role,
+      isDoctor,
+      switchRole,
       login,
       abhaLogin,
       signup,

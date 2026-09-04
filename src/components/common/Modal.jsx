@@ -25,18 +25,18 @@ export const Modal = ({ isOpen, onClose, title, children, maxWidth = "max-w-2xl"
         onClick={onClose} 
         aria-hidden="true" 
       />
-      <div className={`relative w-full ${maxWidth} bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden z-10 my-auto animate-slide-up flex flex-col max-h-[90vh]`}>
+      <div className={`relative w-full ${maxWidth} bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden z-10 my-auto animate-slide-up flex flex-col max-h-[90vh] transition-colors duration-150`}>
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40">
           {typeof title === 'string' ? (
-            <h3 className="text-lg font-bold text-slate-800 tracking-tight">{title}</h3>
+            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 tracking-tight">{title}</h3>
           ) : (
             title
           )}
           {showClose && (
             <button
               onClick={onClose}
-              className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-all"
+              className="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all"
             >
               <X className="w-5 h-5" />
             </button>
@@ -44,7 +44,7 @@ export const Modal = ({ isOpen, onClose, title, children, maxWidth = "max-w-2xl"
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto flex-1">
+        <div className="p-6 overflow-y-auto flex-1 text-slate-700 dark:text-slate-200">
           {children}
         </div>
       </div>

@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { HealthProvider } from './context/HealthContext';
 import { FamilyProvider } from './context/FamilyContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 
 // Layouts
@@ -79,47 +80,50 @@ function App() {
   }
 
   return (
-    <LanguageProvider>
-      <AuthProvider>
-        <FamilyProvider>
-          <HealthProvider>
-            <ErrorBoundary>
-              <Routes>
-                {/* Public Routes */}
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/signup" element={<SignupPage />} />
+    <ThemeProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <FamilyProvider>
+            <HealthProvider>
+              <ErrorBoundary>
+                <Routes>
+                  {/* Public Routes */}
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/signup" element={<SignupPage />} />
 
-                {/* Root redirects to App Home */}
-                <Route path="/" element={<Navigate to="/app/home" replace />} />
+                  {/* Root redirects to App Home */}
+                  <Route path="/" element={<Navigate to="/app/home" replace />} />
 
-                {/* Protected Routes — require authentication */}
-                <Route element={<RequireAuth />}>
-                  <Route path="/app" element={<AppLayout />}>
-                    <Route index element={<Navigate to="/app/home" replace />} />
-                    <Route path="home" element={<HomePage />} />
-                    <Route path="calendar" element={<CalendarPage />} />
-                    <Route path="timeline" element={<TimelinePage />} />
-                    <Route path="records" element={<MedicalRecordsPage />} />
-                    <Route path="trends" element={<TrendsPage />} />
-                    <Route path="story" element={<HealthStoryPage />} />
-                    <Route path="ai" element={<AIAssistantPage />} />
-                    <Route path="doctors" element={<DoctorsPage />} />
-                    <Route path="doctors/:id" element={<DoctorDetailPage />} />
-                    <Route path="appointments" element={<AppointmentsPage />} />
-                    <Route path="reminders" element={<RemindersPage />} />
-                    <Route path="profile" element={<ProfilePage />} />
-                    <Route path="settings" element={<SettingsPage />} />
+                  {/* Protected Routes — require authentication */}
+                  <Route element={<RequireAuth />}>
+                    <Route path="/app" element={<AppLayout />}>
+                      <Route index element={<Navigate to="/app/home" replace />} />
+                      <Route path="home" element={<HomePage />} />
+                      <Route path="calendar" element={<CalendarPage />} />
+                      <Route path="timeline" element={<TimelinePage />} />
+                      <Route path="records" element={<MedicalRecordsPage />} />
+                      <Route path="trends" element={<TrendsPage />} />
+                      <Route path="story" element={<HealthStoryPage />} />
+                      <Route path="ai" element={<AIAssistantPage />} />
+                      <Route path="ai-assistant" element={<Navigate to="/app/ai" replace />} />
+                      <Route path="doctors" element={<DoctorsPage />} />
+                      <Route path="doctors/:id" element={<DoctorDetailPage />} />
+                      <Route path="appointments" element={<AppointmentsPage />} />
+                      <Route path="reminders" element={<RemindersPage />} />
+                      <Route path="profile" element={<ProfilePage />} />
+                      <Route path="settings" element={<SettingsPage />} />
+                    </Route>
                   </Route>
-                </Route>
 
-                {/* Catch-all */}
-                <Route path="*" element={<Navigate to="/app/home" replace />} />
-              </Routes>
-            </ErrorBoundary>
-          </HealthProvider>
-        </FamilyProvider>
-      </AuthProvider>
-    </LanguageProvider>
+                  {/* Catch-all */}
+                  <Route path="*" element={<Navigate to="/app/home" replace />} />
+                </Routes>
+              </ErrorBoundary>
+            </HealthProvider>
+          </FamilyProvider>
+        </AuthProvider>
+      </LanguageProvider>
+    </ThemeProvider>
   );
 }
 

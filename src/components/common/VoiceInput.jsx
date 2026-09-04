@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Mic, Square, Loader2, CheckCircle2, Sparkles } from 'lucide-react';
+import { Mic, Square, Loader2, CheckCircle2, Sparkles, AlertCircle } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { LANG_NAMES } from '../../services/translationService';
 
@@ -8,17 +8,25 @@ const VOICE_STATES = {
   RECORDING: 'RECORDING',
   PROCESSING: 'PROCESSING',
   RESULT: 'RESULT',
+  ERROR: 'ERROR',
+};
+
+const BCP47_MAP = {
+  en: 'en-IN',
+  hi: 'hi-IN',
+  mr: 'mr-IN',
+  bn: 'bn-IN',
+  ta: 'ta-IN',
+  te: 'te-IN',
+  gu: 'gu-IN',
+  kn: 'kn-IN',
+  ml: 'ml-IN',
+  pa: 'pa-IN',
 };
 
 export const VoiceInput = ({
   onResult,
   placeholder = 'Speak naturally in your preferred language...',
-  samplePhrases = [
-    "I've had a dull headache since yesterday morning and felt slightly dizzy.",
-    'My blood pressure was 130 over 85 this morning after breakfast.',
-    'I took my Pantoprazole 40mg dose at 8 AM.',
-    'I have been feeling stomach burning after eating dinner.',
-  ],
   compact = false,
   className = '',
   // Spoken language overrides UI language if provided
@@ -27,303 +35,364 @@ export const VoiceInput = ({
   const { t, currentLang } = useLanguage();
   const [state, setState] = useState(VOICE_STATES.IDLE);
   const [transcript, setTranscript] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   const [audioLevel, setAudioLevel] = useState([20, 45, 70, 30, 85, 50, 25]);
 
-  const mediaRecorderRef = useRef(null);
-  const audioChunksRef = useRef([]);
-  const animationRef = useRef(null);
+  const recognitionRef = useRef(null);
+  const streamRef = useRef(null);
   const audioContextRef = useRef(null);
   const analyserRef = useRef(null);
+  const animFrameRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const accumulatedTextRef = useRef('');
 
-  const GROQ_PROXY_URL = import.meta.env.VITE_GROQ_PROXY_URL;
-  const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY; // fallback if no proxy
-  const hasAi = Boolean(GROQ_PROXY_URL || (GROQ_API_KEY && GROQ_API_KEY !== 'your-groq-api-key-here'));
-  // Use spokenLanguage if provided, otherwise default to English for transcription
-  // (Whisper can auto-detect, but sending an explicit language improves accuracy)
-  const whisperLang = spokenLanguage || (currentLang !== 'en' ? currentLang : 'en');
+  const activeLangCode = BCP47_MAP[spokenLanguage || currentLang] || 'en-IN';
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-        mediaRecorderRef.current.stop();
-      }
-      if (audioContextRef.current) {
-        audioContextRef.current.close().catch(() => {});
-      }
-      if (animationRef.current) {
-        clearInterval(animationRef.current);
+      cleanupAudio();
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch (_) {}
       }
     };
   }, []);
 
-  // ── Audio visualizer during recording ──
-  useEffect(() => {
-    if (state === VOICE_STATES.RECORDING && analyserRef.current) {
-      const analyser = analyserRef.current;
-      const dataArray = new Uint8Array(analyser.frequencyBinCount || 256);
+  const cleanupAudio = () => {
+    if (animFrameRef.current) {
+      cancelAnimationFrame(animFrameRef.current);
+      animFrameRef.current = null;
+    }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+      audioContextRef.current.close().catch(() => {});
+      audioContextRef.current = null;
+    }
+  };
 
-      const draw = () => {
-        analyser.getByteFrequencyData(dataArray);
+  const setupVisualizer = (stream) => {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const audioCtx = new AudioCtx();
+      audioContextRef.current = audioCtx;
+      const source = audioCtx.createMediaStreamSource(stream);
+      const analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 64;
+      source.connect(analyser);
+      analyserRef.current = analyser;
+
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+      const renderAudioBars = () => {
+        if (!analyserRef.current) return;
+        analyserRef.current.getByteFrequencyData(dataArray);
+
         const bars = [];
-        const sliceCount = Math.min(7, dataArray.length);
-        for (let i = 0; i < sliceCount; i++) {
-          const start = Math.floor((i * dataArray.length) / sliceCount);
-          const end = Math.floor(((i + 1) * dataArray.length) / sliceCount);
-          let sum = 0;
-          for (let j = start; j < end; j++) sum += dataArray[j];
-          bars.push(Math.floor(sum / Math.max(1, end - start)));
+        const step = Math.floor(dataArray.length / 7) || 1;
+        for (let i = 0; i < 7; i++) {
+          const val = dataArray[i * step] || 20;
+          bars.push(Math.max(15, Math.min(100, Math.floor(val * 0.7))));
         }
-        // Pad to 7 bars
-        while (bars.length < 7) bars.push(20);
         setAudioLevel(bars);
+        animFrameRef.current = requestAnimationFrame(renderAudioBars);
       };
 
-      animationRef.current = setInterval(draw, 100);
-    } else if (animationRef.current) {
-      clearInterval(animationRef.current);
-      animationRef.current = null;
+      renderAudioBars();
+    } catch (e) {
+      console.warn('[VoiceInput] Could not initialize audio visualizer:', e);
+    }
+  };
+
+  // ── Start Recording via Web Speech API or Fallback ──
+  const startRecording = async () => {
+    setErrorMessage('');
+    accumulatedTextRef.current = '';
+    setTranscript('');
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    // Optional audio visualizer stream
+    let micStream = null;
+    try {
+      if (navigator.mediaDevices?.getUserMedia) {
+        micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        streamRef.current = micStream;
+        setupVisualizer(micStream);
+      }
+    } catch (err) {
+      console.warn('[VoiceInput] Mic visualizer permission denied or unavailable:', err);
     }
 
-    return () => {
-      if (animationRef.current) {
-        clearInterval(animationRef.current);
-        animationRef.current = null;
-      }
-    };
-  }, [state]);
+    if (SpeechRecognition) {
+      // ── Primary Engine: Native Web Speech API ──
+      try {
+        const recognition = new SpeechRecognition();
+        recognition.lang = activeLangCode;
+        recognition.continuous = true;
+        recognition.interimResults = true;
 
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        recognition.onstart = () => {
+          setState(VOICE_STATES.RECORDING);
+        };
 
-      if (hasAi) {
-        // ── Real Whisper path ──
-        const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-          ? 'audio/webm;codecs=opus'
-          : 'audio/webm';
-        const mediaRecorder = new MediaRecorder(stream, { mimeType });
+        recognition.onresult = (event) => {
+          let currentFinal = '';
+          let currentInterim = '';
 
-        audioChunksRef.current = [];
+          for (let i = 0; i < event.results.length; i++) {
+            const res = event.results[i];
+            if (res.isFinal) {
+              currentFinal += res[0].transcript + ' ';
+            } else {
+              currentInterim += res[0].transcript;
+            }
+          }
 
-        mediaRecorder.ondataavailable = (event) => {
-          if (event.data.size > 0) {
-            audioChunksRef.current.push(event.data);
+          const combined = (currentFinal + currentInterim).trim();
+          accumulatedTextRef.current = currentFinal.trim() || combined;
+          setTranscript(combined);
+        };
+
+        recognition.onerror = (event) => {
+          console.warn('[VoiceInput] Recognition error:', event.error);
+          if (event.error === 'no-speech') {
+            // User did not speak; not a hard error
+            return;
+          }
+          if (event.error === 'not-allowed') {
+            setErrorMessage('Microphone access denied. Please allow microphone permissions.');
+            setState(VOICE_STATES.ERROR);
+            cleanupAudio();
+            return;
+          }
+          setErrorMessage(`Speech recognition error (${event.error})`);
+        };
+
+        recognition.onend = () => {
+          cleanupAudio();
+          const finalText = accumulatedTextRef.current.trim();
+          if (finalText) {
+            setState(VOICE_STATES.RESULT);
+            if (onResult) onResult(finalText);
+            setTimeout(() => {
+              setState(VOICE_STATES.IDLE);
+              setTranscript('');
+            }, 3000);
+          } else {
+            setState(VOICE_STATES.IDLE);
           }
         };
 
-        mediaRecorder.start(200); // Emit chunks every 200ms
-        mediaRecorderRef.current = mediaRecorder;
+        recognitionRef.current = recognition;
+        recognition.start();
         setState(VOICE_STATES.RECORDING);
-
-        // Setup visualizer
-        if (window.AudioContext) {
-          const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-          audioContextRef.current = audioCtx;
-          const source = audioCtx.createMediaStreamSource(stream);
-          const analyser = audioCtx.createAnalyser();
-          analyser.fftSize = 256;
-          source.connect(analyser);
-          analyserRef.current = analyser;
-        }
-
-        // Stop tracks when recording ends
-        mediaRecorder.onstop = async () => {
-          stream.getTracks().forEach((t) => t.stop());
-          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-          audioChunksRef.current = [];
-          setState(VOICE_STATES.PROCESSING);
-          const result = await transcribeWithWhisper(audioBlob);
-          setTranscript(result);
-          setState(VOICE_STATES.RESULT);
-          if (onResult) onResult(result);
-          setTimeout(() => {
-            setState(VOICE_STATES.IDLE);
-            setTranscript('');
-          }, 3500);
-        };
-      } else {
-        // ── Fallback: simulation ──
-        simulateVoiceInput(stream);
+      } catch (err) {
+        console.error('[VoiceInput] Failed to start SpeechRecognition:', err);
+        cleanupAudio();
+        setErrorMessage('Unable to start speech recognition.');
+        setState(VOICE_STATES.ERROR);
       }
+    } else {
+      // ── Fallback if Web Speech API is absent in this browser ──
+      fallbackWhisperRecording(micStream);
+    }
+  };
+
+  // ── Fallback Whisper recording for browsers without SpeechRecognition ──
+  const fallbackWhisperRecording = async (micStream) => {
+    const groqKey =
+      localStorage.getItem('ai_api_key') ||
+      import.meta.env.VITE_GROQ_API_KEY;
+
+    if (!groqKey || groqKey === 'your-groq-api-key-here') {
+      cleanupAudio();
+      setErrorMessage(
+        'Speech recognition is not supported in this browser. Please use Chrome, Edge, or configure an API key.'
+      );
+      setState(VOICE_STATES.ERROR);
+      return;
+    }
+
+    try {
+      const stream = micStream || (await navigator.mediaDevices.getUserMedia({ audio: true }));
+      streamRef.current = stream;
+      setupVisualizer(stream);
+
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : 'audio/webm';
+      const mediaRecorder = new MediaRecorder(stream, { mimeType });
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        cleanupAudio();
+        setState(VOICE_STATES.PROCESSING);
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        audioChunksRef.current = [];
+
+        try {
+          const formData = new FormData();
+          formData.append('file', audioBlob, 'speech.webm');
+          formData.append('model', 'whisper-large-v3');
+          formData.append('language', activeLangCode.split('-')[0]);
+
+          const res = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${groqKey}` },
+            body: formData,
+          });
+
+          if (!res.ok) throw new Error(`Whisper API error: ${res.status}`);
+          const data = await res.json();
+          const recognizedText = (data.text || '').trim();
+
+          if (recognizedText) {
+            setTranscript(recognizedText);
+            setState(VOICE_STATES.RESULT);
+            if (onResult) onResult(recognizedText);
+            setTimeout(() => {
+              setState(VOICE_STATES.IDLE);
+              setTranscript('');
+            }, 3000);
+          } else {
+            setState(VOICE_STATES.IDLE);
+          }
+        } catch (err) {
+          console.error('[VoiceInput] Whisper fallback error:', err);
+          setErrorMessage('Transcription failed: ' + err.message);
+          setState(VOICE_STATES.ERROR);
+        }
+      };
+
+      mediaRecorder.start(200);
+      mediaRecorderRef.current = mediaRecorder;
+      setState(VOICE_STATES.RECORDING);
     } catch (err) {
-      console.error('[VoiceInput] Mic error:', err);
-      simulateVoiceInput(null);
+      cleanupAudio();
+      setErrorMessage('Could not access microphone: ' + err.message);
+      setState(VOICE_STATES.ERROR);
     }
   };
 
   const stopRecording = () => {
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch (_) {}
+      recognitionRef.current = null;
+    }
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-      mediaRecorderRef.current.stop();
+      try {
+        mediaRecorderRef.current.stop();
+      } catch (_) {}
+      mediaRecorderRef.current = null;
     }
-    setState(VOICE_STATES.IDLE);
-  };
+    cleanupAudio();
 
-  const transcribeWithWhisper = async (audioBlob) => {
-    try {
-      let json;
-
-      if (GROQ_PROXY_URL) {
-        // Convert blob → base64 for JSON transport to the Edge Function
-        const arrayBuf = await audioBlob.arrayBuffer();
-        const bytes = new Uint8Array(arrayBuf);
-        let binary = '';
-        bytes.forEach(b => (binary += String.fromCharCode(b)));
-        const audioBase64 = btoa(binary);
-
-        const res = await fetch(GROQ_PROXY_URL, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            kind: 'transcribe',
-            audioBase64,
-            language: whisperLang,
-            mimeType: audioBlob.type || 'audio/webm',
-          }),
-        });
-        if (!res.ok) throw new Error(`Proxy error: ${res.status} ${res.statusText}`);
-        json = await res.json();
-      } else {
-        // Direct call to Groq (API key in client — not recommended for prod)
-        const formData = new FormData();
-        formData.append('file', audioBlob, 'recording.webm');
-        formData.append('model', 'whisper-large-v3');
-        formData.append('language', whisperLang);
-        formData.append(
-          'prompt',
-          'Transcribe only the spoken words. Remove filler sounds like um, ah, eh. Keep medical terms exact.'
-        );
-        const res = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${GROQ_API_KEY}` },
-          body: formData,
-        });
-        if (!res.ok) throw new Error(`Whisper API error: ${res.status} ${res.statusText}`);
-        json = await res.json();
-      }
-
-      let text = json.text || '';
-
-      // Translate regional language speech → English for the AI assistant
-      if (whisperLang !== 'en') {
-        text = await translateToEnglish(text, whisperLang);
-      }
-
-      return text.trim();
-    } catch (err) {
-      console.error('[VoiceInput] Whisper failed:', err.message);
-      return `[Transcription error: ${err.message}]`;
-    }
-  };
-
-  const translateToEnglish = async (text, sourceLang) => {
-    const chatPayload = {
-      messages: [
-        {
-          role: 'system',
-          content: `Translate the following ${LANG_NAMES[sourceLang] || sourceLang} text from the user's voice into English. Output ONLY the English translation, no formatting, no quotation marks, no explanations.`,
-        },
-        { role: 'user', content: text },
-      ],
-      temperature: 0.1,
-    };
-
-    const url = GROQ_PROXY_URL || 'https://api.groq.com/openai/v1/chat/completions';
-    const headers = GROQ_PROXY_URL
-      ? { 'Content-Type': 'application/json' }
-      : { 'Authorization': `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' };
-    const body = GROQ_PROXY_URL
-      ? JSON.stringify({ kind: 'chat', ...chatPayload })
-      : JSON.stringify({ model: 'llama-3.1-8b-instant', ...chatPayload });
-
-    const res = await fetch(url, { method: 'POST', headers, body });
-    if (!res.ok) return text;
-    const json = await res.json();
-    return json.choices?.[0]?.message?.content || text;
-  };
-
-  // ── Simulation fallback ──
-  const simulateVoiceInput = (stream) => {
-    setState(VOICE_STATES.RECORDING);
-    setAudioLevel([20, 45, 70, 30, 85, 50, 25]);
-
-    setTimeout(() => {
-      setState(VOICE_STATES.PROCESSING);
+    const finalText = accumulatedTextRef.current.trim();
+    if (finalText) {
+      setState(VOICE_STATES.RESULT);
+      if (onResult) onResult(finalText);
       setTimeout(() => {
-        const phrase = samplePhrases[Math.floor(Math.random() * samplePhrases.length)];
-        setTranscript(phrase);
-        setState(VOICE_STATES.RESULT);
-        if (onResult) onResult(phrase);
-        setTimeout(() => {
-          setState(VOICE_STATES.IDLE);
-          setTranscript('');
-        }, 3500);
-      }, 1500);
-    }, 2000);
-
-    // Stop the stream if we opened it
-    if (stream) stream.getTracks().forEach((t) => t.stop());
-  };
-
-  const handleStartListening = () => {
-    if (state === VOICE_STATES.IDLE) {
-      startRecording();
-    } else if (state === VOICE_STATES.RECORDING) {
-      stopRecording();
+        setState(VOICE_STATES.IDLE);
+        setTranscript('');
+      }, 3000);
+    } else {
+      setState(VOICE_STATES.IDLE);
     }
   };
 
-  // ── Compact Button Variant ──
+  const toggleListening = () => {
+    if (state === VOICE_STATES.RECORDING) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  };
+
+  // ── Compact Button Variant (For chat bars, forms, text inputs) ──
   if (compact) {
     return (
-      <button
-        type="button"
-        onClick={handleStartListening}
-        title={state === VOICE_STATES.IDLE ? t.common.tapToSpeak : t.common.listening}
-        className={`p-2.5 rounded-xl transition-all flex items-center justify-center ${
-          state === VOICE_STATES.IDLE
-            ? 'bg-health-50 text-health-700 hover:bg-health-100 border border-health-200'
-            : 'bg-rose-500 text-white animate-pulse shadow-md shadow-rose-200'
-        } ${className}`}
-      >
-        {state === VOICE_STATES.IDLE && <Mic className="w-5 h-5" />}
-        {state === VOICE_STATES.RECORDING && <Square className="w-5 h-5" />}
-        {state === VOICE_STATES.PROCESSING && <Loader2 className="w-5 h-5 animate-spin" />}
-        {state === VOICE_STATES.RESULT && <CheckCircle2 className="w-5 h-5" />}
-      </button>
+      <div className="relative inline-flex items-center">
+        <button
+          type="button"
+          onClick={toggleListening}
+          title={state === VOICE_STATES.RECORDING ? 'Click to Stop' : t.common?.tapToSpeak || 'Tap to Speak'}
+          className={`p-2.5 rounded-xl transition-all flex items-center justify-center ${
+            state === VOICE_STATES.RECORDING
+              ? 'bg-rose-500 text-white animate-pulse shadow-md shadow-rose-300 ring-2 ring-rose-400'
+              : state === VOICE_STATES.PROCESSING
+              ? 'bg-amber-500 text-white'
+              : state === VOICE_STATES.RESULT
+              ? 'bg-emerald-600 text-white'
+              : 'bg-health-50 dark:bg-slate-700 text-health-700 dark:text-health-300 hover:bg-health-100 dark:hover:bg-slate-600 border border-health-200 dark:border-slate-600'
+          } ${className}`}
+        >
+          {state === VOICE_STATES.RECORDING ? (
+            <Square className="w-4 h-4 fill-white" />
+          ) : state === VOICE_STATES.PROCESSING ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : state === VOICE_STATES.RESULT ? (
+            <CheckCircle2 className="w-4 h-4" />
+          ) : (
+            <Mic className="w-4 h-4" />
+          )}
+        </button>
+
+        {errorMessage && (
+          <div className="absolute bottom-full right-0 mb-2 w-56 p-2.5 bg-rose-50 dark:bg-rose-950/80 border border-rose-200 dark:border-rose-800 rounded-xl shadow-lg text-[11px] text-rose-700 dark:text-rose-300 z-50 flex items-start gap-1.5">
+            <AlertCircle className="w-3.5 h-3.5 text-rose-500 shrink-0 mt-0.5" />
+            <span>{errorMessage}</span>
+          </div>
+        )}
+      </div>
     );
   }
 
-  // ── Full VoiceInput Component ──
+  // ── Full VoiceInput Component (For Dashboard, Modals) ──
   return (
     <div
       className={`rounded-2xl border transition-all duration-300 ${
-        state === VOICE_STATES.IDLE
-          ? 'bg-gradient-to-r from-health-50/70 via-slate-50 to-teal-50/50 border-health-200/80 p-5'
-          : state === VOICE_STATES.RECORDING
-          ? 'bg-rose-50/80 border-rose-300 p-6 shadow-glow'
-          : 'bg-emerald-50/80 border-emerald-300 p-6'
+        state === VOICE_STATES.RECORDING
+          ? 'bg-rose-50/90 dark:bg-rose-950/40 border-rose-300 dark:border-rose-800/80 p-6 shadow-glow ring-2 ring-rose-200 dark:ring-rose-900/40'
+          : state === VOICE_STATES.RESULT
+          ? 'bg-emerald-50/90 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800/80 p-6'
+          : state === VOICE_STATES.ERROR
+          ? 'bg-rose-50/70 dark:bg-rose-950/30 border-rose-200 dark:border-rose-800/60 p-5'
+          : 'bg-gradient-to-r from-health-50/70 via-slate-50 to-teal-50/50 dark:from-slate-800/80 dark:via-slate-800/60 dark:to-slate-900 border-health-200/80 dark:border-slate-700/80 p-5'
       } ${className}`}
     >
       <div className="flex flex-col sm:flex-row items-center gap-4">
         {/* Voice Trigger Button */}
         <button
           type="button"
-          onClick={handleStartListening}
+          onClick={toggleListening}
           className={`relative group w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300 shadow-md ${
-            state === VOICE_STATES.IDLE
-              ? 'bg-gradient-to-tr from-health-600 to-teal-500 text-white hover:scale-105 hover:shadow-lg hover:shadow-health-500/25'
-              : state === VOICE_STATES.RECORDING
-              ? 'bg-rose-500 text-white scale-110 shadow-rose-500/40'
-              : 'bg-emerald-600 text-white'
+            state === VOICE_STATES.RECORDING
+              ? 'bg-rose-500 text-white scale-110 shadow-rose-500/40 animate-pulse'
+              : state === VOICE_STATES.RESULT
+              ? 'bg-emerald-600 text-white'
+              : 'bg-gradient-to-tr from-health-600 to-teal-500 text-white hover:scale-105 hover:shadow-lg hover:shadow-health-500/25'
           }`}
         >
-          {state === VOICE_STATES.IDLE && <Mic className="w-7 h-7 transition-transform group-hover:scale-110" />}
-          {state === VOICE_STATES.RECORDING && <Square className="w-7 h-7" />}
-          {state === VOICE_STATES.PROCESSING && <Loader2 className="w-7 h-7 animate-spin" />}
-          {state === VOICE_STATES.RESULT && <CheckCircle2 className="w-7 h-7 text-white" />}
+          {state === VOICE_STATES.RECORDING ? (
+            <Square className="w-6 h-6 fill-white" />
+          ) : state === VOICE_STATES.PROCESSING ? (
+            <Loader2 className="w-6 h-6 animate-spin" />
+          ) : state === VOICE_STATES.RESULT ? (
+            <CheckCircle2 className="w-6 h-6 text-white" />
+          ) : (
+            <Mic className="w-6 h-6 transition-transform group-hover:scale-110" />
+          )}
 
           {state === VOICE_STATES.RECORDING && (
             <span className="absolute -top-1 -right-1 flex h-3 w-3">
@@ -337,12 +406,12 @@ export const VoiceInput = ({
         <div className="flex-1 text-center sm:text-left min-w-0">
           {state === VOICE_STATES.IDLE && (
             <div>
-              <div className="flex items-center justify-center sm:justify-start gap-1.5 font-semibold text-slate-800 text-base">
-                <Sparkles className="w-4 h-4 text-health-600" />
-                <span>{t.home.voicePrompt}</span>
+              <div className="flex items-center justify-center sm:justify-start gap-1.5 font-semibold text-slate-800 dark:text-slate-100 text-base">
+                <Sparkles className="w-4 h-4 text-health-600 dark:text-health-400" />
+                <span>{t.home?.voicePrompt || 'Speak your health update'}</span>
               </div>
-              <p className="text-sm text-slate-500 mt-0.5 truncate">
-                {t.home.voiceExample}
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                {placeholder}
               </p>
             </div>
           )}
@@ -350,53 +419,83 @@ export const VoiceInput = ({
           {state === VOICE_STATES.RECORDING && (
             <div>
               <div className="flex items-center justify-center sm:justify-start gap-2">
-                <span className="font-semibold text-rose-600 text-base">{t.common.listening}</span>
+                <span className="font-semibold text-rose-600 dark:text-rose-400 text-base">
+                  {t.common?.listening || 'Listening…'}
+                </span>
                 <div className="flex items-end gap-1 h-5">
                   {audioLevel.map((height, i) => (
                     <div
                       key={i}
-                      className="w-1 bg-rose-500 rounded-full transition-all duration-150"
-                      style={{ height: `${Math.max(6, Math.min(90, height * 0.35))}px` }}
+                      className="w-1.5 bg-rose-500 rounded-full transition-all duration-100"
+                      style={{ height: `${Math.max(6, Math.min(24, height * 0.28))}px` }}
                     />
                   ))}
                 </div>
               </div>
-              <p className="text-xs text-rose-600/80 mt-1">
-                Listening in {LANG_NAMES[currentLang] || 'English'} — speak clearly
+              <p className="text-xs text-rose-700/90 dark:text-rose-300 mt-1 font-medium">
+                {transcript ? (
+                  <span className="bg-white/80 dark:bg-slate-800 px-2 py-0.5 rounded border border-rose-200 dark:border-rose-800 text-slate-900 dark:text-slate-100">
+                    "{transcript}"
+                  </span>
+                ) : (
+                  `Listening in ${LANG_NAMES[spokenLanguage || currentLang] || 'English'} — speak clearly into your mic`
+                )}
               </p>
             </div>
           )}
 
           {state === VOICE_STATES.PROCESSING && (
             <div>
-              <p className="font-semibold text-teal-700 text-base">{t.common.processing}</p>
-              <p className="text-xs text-teal-600">Converting speech to text…</p>
+              <p className="font-semibold text-teal-700 dark:text-teal-300 text-base">
+                {t.common?.processing || 'Processing speech…'}
+              </p>
+              <p className="text-xs text-teal-600 dark:text-teal-400">Converting spoken words to text…</p>
             </div>
           )}
 
           {state === VOICE_STATES.RESULT && (
             <div className="animate-fade-in">
-              <div className="text-xs font-semibold uppercase tracking-wider text-emerald-700">
-                Voice Recognized
+              <div className="text-xs font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-300 flex items-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Voice Recognized</span>
               </div>
-              <p className="text-sm font-medium text-slate-800 mt-0.5 bg-white/80 px-3 py-1.5 rounded-lg border border-emerald-200">
+              <p className="text-sm font-medium text-slate-800 dark:text-slate-100 mt-1 bg-white dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-emerald-200 dark:border-emerald-800 shadow-xs">
                 "{transcript}"
               </p>
             </div>
           )}
+
+          {state === VOICE_STATES.ERROR && (
+            <div>
+              <p className="text-xs font-bold text-rose-700 dark:text-rose-400 flex items-center gap-1">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                <span>Microphone Notice</span>
+              </p>
+              <p className="text-xs text-rose-600 dark:text-rose-300 mt-0.5">{errorMessage}</p>
+            </div>
+          )}
         </div>
 
-        {/* Helper button when idle */}
-        {state === VOICE_STATES.IDLE && (
+        {/* Action button */}
+        {state === VOICE_STATES.IDLE ? (
           <button
             type="button"
-            onClick={handleStartListening}
-            className="hidden md:inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-health-700 bg-white hover:bg-health-50 border border-health-200 rounded-xl transition-all shadow-sm"
+            onClick={toggleListening}
+            className="hidden md:inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-health-700 bg-white hover:bg-health-50 border border-health-200 rounded-xl transition-all shadow-xs"
           >
             <Mic className="w-3.5 h-3.5" />
-            <span>{t.common.tapToSpeak}</span>
+            <span>{t.common?.tapToSpeak || 'Tap to Speak'}</span>
           </button>
-        )}
+        ) : state === VOICE_STATES.RECORDING ? (
+          <button
+            type="button"
+            onClick={toggleListening}
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-all shadow-sm"
+          >
+            <Square className="w-3.5 h-3.5 fill-white" />
+            <span>Done Speaking</span>
+          </button>
+        ) : null}
       </div>
     </div>
   );

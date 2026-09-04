@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   Sparkles, 
@@ -17,22 +17,153 @@ import {
   Stethoscope, 
   ChevronRight,
   BookOpen,
-  Plus
+  Plus,
+  Volume2,
+  Square,
+  MessageSquare,
+  X,
+  Loader2,
+  Languages
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useHealth } from '../../context/HealthContext';
 import { useLanguage } from '../../context/LanguageContext';
+import { aiService } from '../../services/aiService';
+import { LANG_NAMES } from '../../services/translationService';
 import { VoiceInput } from '../../components/common/VoiceInput';
 import { RecordCard } from '../../components/records/RecordCard';
 import { AnupanaCard } from '../../components/common/AnupanaCard';
 import { MetricCard } from '../../components/common/MetricCard';
 import { EmptyState } from '../../components/common/EmptyState';
+import { FormattedAIResponse } from '../../components/ai/FormattedAIResponse';
+
+const BCP47_MAP = {
+  en: 'en-IN',
+  hi: 'hi-IN',
+  mr: 'mr-IN',
+  bn: 'bn-IN',
+  ta: 'ta-IN',
+  te: 'te-IN',
+  gu: 'gu-IN',
+  kn: 'kn-IN',
+  ml: 'ml-IN',
+  pa: 'pa-IN',
+};
 
 export const HomePage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { records, reminders, appointments, stats, openAddRecord, loading } = useHealth();
-  const { t } = useLanguage();
+  const { t, currentLang } = useLanguage();
+
+  // Voice assistant state for Home page
+  const [voiceQuery, setVoiceQuery] = useState('');
+  const [voiceResponse, setVoiceResponse] = useState(null);
+  const [isVoiceThinking, setIsVoiceThinking] = useState(false);
+  const [isVoiceSpeaking, setIsVoiceSpeaking] = useState(false);
+  const [voiceError, setVoiceError] = useState(null);
+  const responseCardRef = useRef(null);
+
+  // Stop speech synthesis on unmount
+  useEffect(() => {
+    return () => {
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+
+  const speakAnswer = (text, langCode) => {
+    if (!window.speechSynthesis) return;
+
+    window.speechSynthesis.cancel();
+
+    // Strip markdown formatting for natural speech
+    const cleanText = text
+      .replace(/[#*_`~\[\]]/g, '')
+      .replace(/\(.*?\)/g, '')
+      .replace(/\n+/g, '. ')
+      .trim();
+
+    const targetCode = langCode || currentLang || 'en';
+    const utter = new SpeechSynthesisUtterance(cleanText);
+    const bcpCode = BCP47_MAP[targetCode] || 'en-IN';
+    utter.lang = bcpCode;
+    utter.rate = 0.95;
+
+    const voices = window.speechSynthesis.getVoices();
+    const matchedVoice = voices.find(
+      (v) =>
+        v.lang === bcpCode ||
+        v.lang.replace('_', '-').startsWith(targetCode) ||
+        v.lang.toLowerCase().includes(targetCode)
+    );
+    if (matchedVoice) {
+      utter.voice = matchedVoice;
+    }
+
+    utter.onstart = () => setIsVoiceSpeaking(true);
+    utter.onend = () => setIsVoiceSpeaking(false);
+    utter.onerror = () => setIsVoiceSpeaking(false);
+
+    setIsVoiceSpeaking(true);
+    window.speechSynthesis.speak(utter);
+  };
+
+  const handleToggleVoicePlayback = () => {
+    if (!window.speechSynthesis) return;
+    if (isVoiceSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsVoiceSpeaking(false);
+    } else if (voiceResponse?.aiResponse) {
+      speakAnswer(voiceResponse.aiResponse, voiceResponse.lang || currentLang);
+    }
+  };
+
+  const handleDismissVoiceCard = () => {
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    setIsVoiceSpeaking(false);
+    setVoiceResponse(null);
+    setVoiceQuery('');
+    setVoiceError(null);
+    setIsVoiceThinking(false);
+  };
+
+  const handleHomeVoiceInput = async (speechText) => {
+    const query = (speechText || '').trim();
+    if (!query) return;
+
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      setIsVoiceSpeaking(false);
+    }
+
+    setVoiceQuery(query);
+    setIsVoiceThinking(true);
+    setVoiceError(null);
+    setVoiceResponse(null);
+
+    setTimeout(() => {
+      responseCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 100);
+
+    try {
+      const response = await aiService.askAssistant(query, records, user, currentLang);
+      setVoiceResponse(response);
+
+      // Auto-speak response out loud
+      setTimeout(() => {
+        speakAnswer(response.aiResponse, response.lang || currentLang);
+      }, 250);
+    } catch (err) {
+      console.error('[HomePage] Voice assistant error:', err);
+      setVoiceError(err.message || 'Could not process query.');
+    } finally {
+      setIsVoiceThinking(false);
+    }
+  };
 
   // Today's records (match today's date)
   const todayStr = new Date().toISOString().split('T')[0];
@@ -70,10 +201,201 @@ export const HomePage = () => {
         <VoiceInput
           placeholder={t.home.voicePrompt}
           onResult={(speechText) => {
-            // Pre-fill notes in global modal and open
-            openAddRecord('note');
+            handleHomeVoiceInput(speechText);
           }}
         />
+
+        {/* Inline Aarogya Voice Assistant Response Panel */}
+        <div ref={responseCardRef}>
+          {isVoiceThinking && (
+            <div className="bg-gradient-to-r from-health-50 via-teal-50 to-emerald-50 border border-health-200/80 rounded-3xl p-6 shadow-sm animate-fade-in">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-health-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-health-600/30 animate-pulse">
+                  <Sparkles className="w-5 h-5 animate-spin text-health-100" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-health-800">
+                      Aarogya Health Assistant
+                    </span>
+                    <span className="flex h-2 w-2 relative">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-health-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-health-500"></span>
+                    </span>
+                  </div>
+                  <p className="text-sm text-slate-700 font-medium italic mt-0.5">
+                    "{voiceQuery}"
+                  </p>
+                </div>
+              </div>
+              <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-health-700 bg-white/80 backdrop-blur-xs py-2 px-3.5 rounded-xl border border-health-200/60 w-fit">
+                <Loader2 className="w-4 h-4 animate-spin text-health-600" />
+                <span>Checking your recorded vitals & health timeline...</span>
+              </div>
+            </div>
+          )}
+
+          {voiceError && !isVoiceThinking && (
+            <div className="bg-rose-50 border border-rose-200 rounded-2xl p-4 text-rose-800 flex items-start gap-3 animate-fade-in">
+              <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-semibold">Unable to complete health analysis</p>
+                <p className="text-xs text-rose-600 mt-0.5">{voiceError}</p>
+                <div className="mt-3 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleHomeVoiceInput(voiceQuery)}
+                    className="px-3 py-1.5 rounded-lg bg-rose-600 text-white text-xs font-bold hover:bg-rose-700 transition-colors"
+                  >
+                    Try Again
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDismissVoiceCard}
+                    className="px-3 py-1.5 rounded-lg border border-rose-300 text-rose-700 text-xs font-semibold hover:bg-rose-100 transition-colors"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {voiceResponse && !isVoiceThinking && (
+            <div className="bg-gradient-to-br from-white via-slate-50 to-health-50/40 border-2 border-health-300/70 rounded-3xl p-5 sm:p-6 shadow-md shadow-health-600/5 space-y-4 animate-fade-in">
+              {/* Header */}
+              <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-health-600 to-teal-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-health-600/20">
+                    <Sparkles className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-sm font-bold text-slate-900">
+                        Aarogya Voice Answer
+                      </h4>
+                      {voiceResponse.lang && voiceResponse.lang !== 'en' && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-health-100 text-health-800 text-[10px] font-bold border border-health-200">
+                          <Languages className="w-3 h-3 text-health-700" />
+                          <span>{LANG_NAMES[voiceResponse.lang] || voiceResponse.lang}</span>
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-500 mt-0.5 line-clamp-1 italic">
+                      Q: "{voiceQuery}"
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={handleToggleVoicePlayback}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-xs ${
+                      isVoiceSpeaking
+                        ? 'bg-rose-600 text-white animate-pulse hover:bg-rose-700'
+                        : 'bg-health-600 text-white hover:bg-health-700'
+                    }`}
+                    title={isVoiceSpeaking ? 'Stop Voice Playback' : 'Listen Voice Answer'}
+                  >
+                    {isVoiceSpeaking ? (
+                      <>
+                        <Square className="w-3.5 h-3.5 fill-white" />
+                        <span>Stop Voice</span>
+                      </>
+                    ) : (
+                      <>
+                        <Volume2 className="w-3.5 h-3.5" />
+                        <span>Listen Again</span>
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleDismissVoiceCard}
+                    className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+                    title="Dismiss"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Voice Playing Indicator Wave */}
+              {isVoiceSpeaking && (
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-health-100/70 border border-health-200 rounded-xl text-xs font-bold text-health-800 animate-pulse">
+                  <Volume2 className="w-4 h-4 text-health-600" />
+                  <span>Speaking voice response in {LANG_NAMES[voiceResponse.lang || currentLang] || 'English'}...</span>
+                  <div className="flex items-end gap-1 h-3 ml-auto">
+                    <span className="w-1 h-3 bg-health-600 rounded-full animate-bounce"></span>
+                    <span className="w-1 h-2 bg-health-500 rounded-full animate-bounce [animation-delay:0.1s]"></span>
+                    <span className="w-1 h-3 bg-health-600 rounded-full animate-bounce [animation-delay:0.2s]"></span>
+                  </div>
+                </div>
+              )}
+
+              {/* AI Response Text with High Readability Formatting */}
+              <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-100 shadow-xs">
+                <FormattedAIResponse content={voiceResponse.aiResponse} isUser={false} />
+              </div>
+
+              {/* Disclaimer */}
+              {voiceResponse.disclaimer && (
+                <div className="flex items-start gap-1.5 text-[11px] text-slate-400 italic">
+                  <AlertCircle className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
+                  <span>{voiceResponse.disclaimer}</span>
+                </div>
+              )}
+
+              {/* Follow-up suggestions */}
+              {voiceResponse.followUp?.options && voiceResponse.followUp.options.length > 0 && (
+                <div className="bg-health-50/60 border border-health-200/70 rounded-2xl p-3.5 space-y-2">
+                  <p className="text-xs font-bold text-health-900">
+                    {voiceResponse.followUp.question || 'Explore further:'}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {voiceResponse.followUp.options.map((opt, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => handleHomeVoiceInput(opt)}
+                        className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white hover:bg-health-600 hover:text-white text-health-800 border border-health-200 shadow-xs transition-all text-left"
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Footer Actions */}
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => openAddRecord('note')}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-100 border border-slate-200 transition-colors"
+                >
+                  <StickyNote className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Save Note to Timeline</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (window.speechSynthesis) window.speechSynthesis.cancel();
+                    navigate(`/app/ai?q=${encodeURIComponent(voiceQuery)}`);
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-900 text-white hover:bg-slate-800 transition-colors ml-auto shadow-xs"
+                >
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  <span>Continue in AI Assistant Chat</span>
+                  <ArrowRight className="w-3 h-3" />
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* 2. Quick Record Bar */}

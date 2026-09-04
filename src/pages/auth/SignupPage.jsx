@@ -13,6 +13,37 @@ import { VoiceInput } from '../../components/common/VoiceInput';
 
 const TOTAL_STEPS = 8;
 
+const InputField = ({ label, value, onChange, placeholder, type = "text", className = "", ...rest }) => (
+  <div className={className}>
+    <label className="block text-xs font-semibold text-slate-600 mb-1">{label}</label>
+    <input
+      type={type}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-health-500 focus:bg-white transition-all"
+      {...rest}
+    />
+  </div>
+);
+
+const SelectField = ({ label, value, onChange, options, className = "" }) => (
+  <div className={className}>
+    <label className="block text-xs font-semibold text-slate-600 mb-1">{label}</label>
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-health-500"
+    >
+      {options.map(opt => (
+        <option key={typeof opt === 'string' ? opt : opt.value} value={typeof opt === 'string' ? opt : opt.value}>
+          {typeof opt === 'string' ? opt : opt.label}
+        </option>
+      ))}
+    </select>
+  </div>
+);
+
 export const SignupPage = () => {
   const navigate = useNavigate();
   const { signup } = useAuth();
@@ -201,36 +232,6 @@ export const SignupPage = () => {
     "Review & Confirm"
   ];
 
-  const InputField = ({ label, value, onChange, placeholder, type = "text", className = "", ...rest }) => (
-    <div className={className}>
-      <label className="block text-xs font-semibold text-slate-600 mb-1">{label}</label>
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-health-500 focus:bg-white transition-all"
-        {...rest}
-      />
-    </div>
-  );
-
-  const SelectField = ({ label, value, onChange, options, className = "" }) => (
-    <div className={className}>
-      <label className="block text-xs font-semibold text-slate-600 mb-1">{label}</label>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-health-500"
-      >
-        {options.map(opt => (
-          <option key={typeof opt === 'string' ? opt : opt.value} value={typeof opt === 'string' ? opt : opt.value}>
-            {typeof opt === 'string' ? opt : opt.label}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">

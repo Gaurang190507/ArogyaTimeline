@@ -551,6 +551,7 @@ export const authService = {
       medicalBackground: profile.medical_background || {},
       currentMedications: profile.current_medications || [],
       preferences: profile.preferences || { language: "en", theme: "light" },
+      role: (typeof window !== 'undefined' && localStorage.getItem('user_active_role')) || profile.role || profile.preferences?.role || "patient",
       avatarUrl: profile.avatar_url,
       createdAt: profile.created_at || new Date().toISOString(),
       abhaAddress: profile.abha_address || "",

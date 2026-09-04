@@ -45,14 +45,14 @@ export const Sidebar = () => {
   ];
 
   return (
-    <aside className="hidden lg:flex flex-col w-64 bg-white border-r border-slate-200/80 min-h-screen p-4 sticky top-0 h-screen z-30">
+    <aside className="hidden lg:flex flex-col w-64 bg-white dark:bg-slate-900 border-r border-slate-200/80 dark:border-slate-800 min-h-screen p-4 sticky top-0 h-screen z-30 transition-colors duration-150">
       {/* Brand Header */}
       <div className="flex items-center gap-3 px-3 py-2 mb-4">
         <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-health-600 to-teal-500 text-white flex items-center justify-center shadow-md shadow-health-600/25">
           <Heart className="w-6 h-6 fill-white/20" />
         </div>
         <div>
-          <h2 className="font-bold text-slate-900 text-base tracking-tight leading-tight">
+          <h2 className="font-bold text-slate-900 dark:text-white text-base tracking-tight leading-tight">
             {t.brand.name}
           </h2>
           <p className="text-[11px] text-slate-400 font-medium truncate max-w-[140px]">
@@ -88,8 +88,8 @@ export const Sidebar = () => {
                   className={({ isActive }) =>
                     `flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-sm font-semibold transition-all ${
                       isActive
-                        ? 'bg-health-50 text-health-800 font-bold border border-health-200/80 shadow-xs'
-                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                        ? 'bg-health-50 dark:bg-health-950/60 text-health-800 dark:text-health-300 font-bold border border-health-200/80 dark:border-health-800/80 shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100'
                     }`
                   }
                 >
@@ -98,7 +98,7 @@ export const Sidebar = () => {
                     <span>{item.label}</span>
                   </div>
                   {item.badge && (
-                    <span className="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded-md bg-health-100 text-health-800 border border-health-300">
+                    <span className="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded-md bg-health-100 dark:bg-health-900 text-health-800 dark:text-health-200 border border-health-300 dark:border-health-700">
                       {item.badge}
                     </span>
                   )}
@@ -123,8 +123,8 @@ export const Sidebar = () => {
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-sm font-semibold transition-all ${
                       isActive
-                        ? 'bg-health-50 text-health-800 font-bold border border-health-200/80'
-                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                        ? 'bg-health-50 dark:bg-health-950/60 text-health-800 dark:text-health-300 font-bold border border-health-200/80 dark:border-health-800/80'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100'
                     }`
                   }
                 >
@@ -138,7 +138,7 @@ export const Sidebar = () => {
       </div>
 
       {/* Bottom Profile & Settings */}
-      <div className="pt-3 mt-auto border-t border-slate-100 space-y-1">
+      <div className="pt-3 mt-auto border-t border-slate-100 dark:border-slate-800 space-y-1">
         {bottomNavLinks.map((item) => {
           const Icon = item.icon;
           return (
@@ -148,8 +148,8 @@ export const Sidebar = () => {
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3.5 py-2 rounded-2xl text-sm font-medium transition-all ${
                   isActive
-                    ? 'bg-slate-100 text-slate-900 font-semibold'
-                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+                    ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-semibold'
+                    : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-slate-200'
                 }`
               }
             >

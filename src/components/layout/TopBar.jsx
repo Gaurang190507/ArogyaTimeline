@@ -7,6 +7,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useFamily } from '../../context/FamilyContext';
 import { LanguageSelector } from '../common/LanguageSelector';
 import { AttendantToggle } from '../common/AttendantToggle';
+import { ThemeToggle } from '../common/ThemeToggle';
 
 export const TopBar = ({ onSearchChange, searchQuery = '' }) => {
   const { user } = useAuth();
@@ -15,13 +16,13 @@ export const TopBar = ({ onSearchChange, searchQuery = '' }) => {
   const { displayName, displayRelation, isAttendantView, returnToSelf } = useFamily();
 
   return (
-    <header className="sticky top-0 z-20 bg-slate-50/90 backdrop-blur-md border-b border-slate-200/60 px-4 sm:px-8 py-3.5 flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-20 bg-slate-50/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-800 px-4 sm:px-8 py-3.5 flex items-center justify-between gap-4 transition-colors duration-150">
       {/* Mobile Brand Logo */}
       <div className="flex items-center gap-2.5 lg:hidden">
         <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-health-600 to-teal-500 text-white flex items-center justify-center shadow-sm">
           <Heart className="w-5 h-5 fill-white/20" />
         </div>
-        <span className="font-bold text-slate-900 text-sm">{t.brand.name}</span>
+        <span className="font-bold text-slate-900 dark:text-white text-sm">{t.brand.name}</span>
       </div>
 
       {/* Global Search Bar */}
@@ -33,13 +34,16 @@ export const TopBar = ({ onSearchChange, searchQuery = '' }) => {
             value={searchQuery}
             onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
             placeholder={t.common.search}
-            className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-2xl text-xs font-medium text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-health-500 focus:border-transparent transition-all shadow-xs"
+            className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-medium text-slate-700 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-health-500 focus:border-transparent transition-all shadow-xs"
           />
         </div>
       </div>
 
       {/* Action Controls & Profile Badge */}
-      <div className="flex items-center gap-2.5 sm:gap-3">
+      <div className="flex items-center gap-2 sm:gap-2.5">
+        {/* Dark / Light Theme Toggle */}
+        <ThemeToggle compact={true} />
+
         {/* Language Selector */}
         <LanguageSelector compact={true} />
 
@@ -63,7 +67,7 @@ export const TopBar = ({ onSearchChange, searchQuery = '' }) => {
           <button
             type="button"
             onClick={() => returnToSelf()}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl transition-all"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-xl transition-all"
             title="Return to your own records"
           >
             <ArrowLeftToLine className="w-3.5 h-3.5 text-slate-500" />
@@ -74,13 +78,13 @@ export const TopBar = ({ onSearchChange, searchQuery = '' }) => {
         {/* User Profile Capsule */}
         <Link
           to="/app/profile"
-          className="flex items-center gap-2.5 pl-1.5 pr-2.5 py-1 bg-white hover:bg-slate-100 rounded-2xl border border-slate-200/80 transition-all shadow-xs"
+          className="flex items-center gap-2.5 pl-1.5 pr-2.5 py-1 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-750 rounded-2xl border border-slate-200/80 dark:border-slate-700 transition-all shadow-xs"
         >
-          <div className="w-7 h-7 rounded-xl bg-health-100 text-health-800 flex items-center justify-center font-bold text-xs">
+          <div className="w-7 h-7 rounded-xl bg-health-100 dark:bg-health-950 text-health-800 dark:text-health-300 flex items-center justify-center font-bold text-xs">
             {displayName.charAt(0) || user?.name?.charAt(0) || 'R'}
           </div>
           <div className="text-left hidden md:block">
-            <p className="text-xs font-bold text-slate-800 leading-none">
+            <p className="text-xs font-bold text-slate-800 dark:text-slate-100 leading-none">
               {displayName || user?.name || 'Rahul Sharma'}
             </p>
             <p className="text-[10px] text-slate-400 font-medium mt-0.5">
