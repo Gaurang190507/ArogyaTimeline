@@ -59,7 +59,7 @@ export const ConversationSummaryCard = ({
   // Prepare clean text representation for copy/download
   const getPlainTextSummary = () => {
     let out = `=======================================================\n`;
-    out += `         AAROGYA HEALTH MEMORY - CLINICAL SUMMARY      \n`;
+    out += `         MEDIPULSE HEALTH MEMORY - CLINICAL SUMMARY      \n`;
     out += `=======================================================\n\n`;
     out += `Title: ${title}\n`;
     out += `Date: ${formattedDate}\n`;
@@ -112,7 +112,7 @@ export const ConversationSummaryCard = ({
     const element = document.createElement('a');
     const file = new Blob([getPlainTextSummary()], { type: 'text/plain;charset=utf-8' });
     element.href = URL.createObjectURL(file);
-    element.download = `Aarogya_Consultation_Summary_${new Date().toISOString().slice(0, 10)}.txt`;
+    element.download = `MediPulse_Consultation_Summary_${new Date().toISOString().slice(0, 10)}.txt`;
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);

@@ -1,6 +1,6 @@
 export default {
   brand: {
-    name: "आरोग्य टाइमलाइन",
+    name: "MediPulse",
     tagline: "तुमची वैयक्तिक आरोग्य स्मरणिका"
   },
   nav: {

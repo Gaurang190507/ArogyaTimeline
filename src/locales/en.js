@@ -1,6 +1,6 @@
 export default {
   brand: {
-    name: "AarogyaTimeline",
+    name: "MediPulse",
     tagline: "Your Personal Health Memory"
   },
   nav: {

@@ -119,7 +119,7 @@ export const aiService = {
         aiResponse: intent.refusalText,
         isRefusal: true,
         toolCalls: [],
-        disclaimer: 'Aarogya AI is specialized strictly in personal health management.',
+        disclaimer: 'MediPulse AI is specialized strictly in personal health management.',
         followUp: {
           question: targetLanguage === 'hi' ? 'आप अपने स्वास्थ्य रिकॉर्ड के बारे में क्या जांचना चाहते हैं?' : 'How can I assist with your personal health records?',
           options: targetLanguage === 'hi'
@@ -224,7 +224,7 @@ export const aiService = {
 
     const targetLangName = LANG_NAMES[targetLanguage] || 'English';
 
-    const systemInstructionText = `You are "Aarogya", an intelligent, empathetic Personal Health Assistant for the user's personal health timeline.
+    const systemInstructionText = `You are "MediPulse", an intelligent, empathetic Personal Health Assistant for the user's personal health timeline.
 Your purpose is to help the user understand, organize, and prepare information from their personal health history.
 
 You can help with:
@@ -362,7 +362,7 @@ IMPORTANT RULES:
       lang: targetLanguage,
       aiResponse: finalAiText,
       toolCalls: toolCallsExecuted,
-      disclaimer: targetLanguage === 'hi' ? 'आरोग्य एआई केवल व्यक्तिगत स्वास्थ्य रिकॉर्ड ट्रैकिंग के लिए है।' : 'Aarogya AI is grounded in your personal health timeline. Consult your doctor for medical advice.',
+      disclaimer: targetLanguage === 'hi' ? 'मेडीपल्स एआई केवल व्यक्तिगत स्वास्थ्य रिकॉर्ड ट्रैकिंग के लिए है।' : 'MediPulse AI is grounded in your personal health timeline. Consult your doctor for medical advice.',
       followUp: {
         question: targetLanguage === 'hi' ? 'सुझाए गए अगले कदम:' : 'Suggested next actions:',
         options: targetLanguage === 'hi'
@@ -446,7 +446,7 @@ Patient Demographics & Medical History:
 
     const targetLangName = LANG_NAMES[targetLanguage] || 'English';
 
-    return `You are "Aarogya", an intelligent, empathetic personal health assistant for the user's personal health timeline.
+    return `You are "MediPulse", an intelligent, empathetic personal health assistant for the user's personal health timeline.
 You have direct access to the user's real medical history, vitals, and recorded records.
 
 ${profileContext}
@@ -491,7 +491,7 @@ Language & Formatting Instructions for Maximum Readability:
         lang: targetLanguage,
         aiResponse: parsed.aiResponse || rawContent,
         toolCalls: [],
-        disclaimer: parsed.disclaimer || (targetLanguage === 'hi' ? 'आरोग्य एआई केवल सूचनात्मक उद्देश्यों के लिए है। चिकित्सकीय सलाह के लिए अपने डॉक्टर से परामर्श लें।' : 'Aarogya AI is for informational purposes. Consult your doctor for medical advice.'),
+        disclaimer: parsed.disclaimer || (targetLanguage === 'hi' ? 'मेडीपल्स एआई केवल सूचनात्मक उद्देश्यों के लिए है। चिकित्सकीय सलाह के लिए अपने डॉक्टर से परामर्श लें।' : 'MediPulse AI is for informational purposes. Consult your doctor for medical advice.'),
         followUp: parsed.followUp || {
           question: targetLanguage === 'hi' ? 'आप आगे क्या देखना चाहते हैं?' : 'What would you like to explore next?',
           options: targetLanguage === 'hi'
@@ -506,7 +506,7 @@ Language & Formatting Instructions for Maximum Readability:
         lang: targetLanguage,
         aiResponse: rawContent,
         toolCalls: [],
-        disclaimer: targetLanguage === 'hi' ? 'आरोग्य एआई केवल सूचनात्मक उद्देश्यों के लिए है।' : 'Aarogya AI is for informational purposes. Consult your doctor for medical advice.',
+        disclaimer: targetLanguage === 'hi' ? 'मेडीपल्स एआई केवल सूचनात्मक उद्देश्यों के लिए है।' : 'MediPulse AI is for informational purposes. Consult your doctor for medical advice.',
       };
     }
   },
@@ -559,7 +559,7 @@ Language & Formatting Instructions for Maximum Readability:
         lang: targetLanguage,
         aiResponse: msg,
         toolCalls: [{ tool: 'get_measurement_history', args: { type: 'blood_pressure', period: '3_months' } }],
-        disclaimer: isHindi ? 'आरोग्य एआई केवल व्यक्तिगत स्वास्थ्य ट्रैकिंग के लिए है।' : 'Aarogya AI is for informational tracking and continuity.',
+        disclaimer: isHindi ? 'मेडीपल्स एआई केवल व्यक्तिगत स्वास्थ्य ट्रैकिंग के लिए है।' : 'MediPulse AI is for informational tracking and continuity.',
         followUp: {
           question: isHindi ? 'आप और क्या देखना चाहते हैं?' : 'Would you like to examine anything else?',
           options: isHindi
@@ -697,10 +697,10 @@ Language & Formatting Instructions for Maximum Readability:
       userQuery: query,
       lang: targetLanguage,
       aiResponse: isHindi
-        ? `### 🩺 आरोग्य स्वास्थ्य सहायक\n\nमैंने आपकी टाइमलाइन और स्वास्थ्य रिकॉर्ड की समीक्षा की है। आपके पास कुल **${(healthRecords || []).length} रिकॉर्ड** मौजूद हैं।\n\n💡 **उपलब्ध विकल्प:** आप अपने रक्तचाप के रुझान, दवाइयों की सूची, या डॉक्टर विजिट की तैयारी के बारे में पूछ सकते हैं।`
+        ? `### 🩺 मेडीपल्स स्वास्थ्य सहायक\n\nमैंने आपकी टाइमलाइन और स्वास्थ्य रिकॉर्ड की समीक्षा की है। आपके पास कुल **${(healthRecords || []).length} रिकॉर्ड** मौजूद हैं।\n\n💡 **उपलब्ध विकल्प:** आप अपने रक्तचाप के रुझान, दवाइयों की सूची, या डॉक्टर विजिट की तैयारी के बारे में पूछ सकते हैं।`
         : `### 🩺 Health Timeline Assistant\n\nI have reviewed your recorded health memory timeline (**${(healthRecords || []).length} records** on file).\n\n💡 **How I can help:**\n• Analyze your vital measurement trends (BP, glucose, weight)\n• Review your active medications and dosages\n• Prepare comprehensive briefs for your upcoming doctor visits\n• Create timely health reminders`,
       toolCalls: [{ tool: 'get_health_records', args: { limit: 5 } }],
-      disclaimer: 'Aarogya AI is for informational tracking and continuity.',
+      disclaimer: 'MediPulse AI is for informational tracking and continuity.',
       followUp: {
         question: 'Suggested health queries:',
         options: [
@@ -815,7 +815,7 @@ ${transcript}`;
     if (topics.length === 0) {
       topics.push('General Health Memory Review', 'Wellness Discussion');
       insights.push('Reviewed chronological health memory records and active profile parameters.');
-      actionItems.push('Continue regular vitals monitoring and logging in Aarogya.');
+      actionItems.push('Continue regular vitals monitoring and logging in MediPulse.');
     }
 
     return {

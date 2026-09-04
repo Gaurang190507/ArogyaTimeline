@@ -216,7 +216,7 @@ export const HomePage = () => {
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-bold uppercase tracking-wider text-health-800">
-                      Aarogya Health Assistant
+                      MediPulse Health Assistant
                     </span>
                     <span className="flex h-2 w-2 relative">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-health-400 opacity-75"></span>
@@ -272,7 +272,7 @@ export const HomePage = () => {
                   <div>
                     <div className="flex items-center gap-2">
                       <h4 className="text-sm font-bold text-slate-900">
-                        Aarogya Voice Answer
+                        MediPulse Voice Answer
                       </h4>
                       {voiceResponse.lang && voiceResponse.lang !== 'en' && (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-health-100 text-health-800 text-[10px] font-bold border border-health-200">

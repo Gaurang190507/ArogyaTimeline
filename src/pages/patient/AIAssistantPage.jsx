@@ -418,7 +418,7 @@ export const AIAssistantPage = () => {
         date: new Date().toISOString(),
         type: 'consultation',
         title: summary.title || 'Clinical Consultation Summary',
-        provider: isDoctor ? `Dr. ${user?.name || 'Practitioner'}` : 'Aarogya Clinical Assistant',
+        provider: isDoctor ? `Dr. ${user?.name || 'Practitioner'}` : 'MediPulse Clinical Assistant',
         facility: 'Telehealth & AI Consultation Session',
         notes: `${summary.overview}\n\nKey Insights:\n${(summary.insights || []).join('\n')}\n\nAction Items:\n${(summary.actionItems || []).join('\n')}`,
         vitals: summary.vitals && summary.vitals.length > 0 ? { notes: summary.vitals.join(', ') } : undefined,
@@ -841,7 +841,7 @@ export const AIAssistantPage = () => {
         </form>
 
         <div className="flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500 px-2">
-          <span>{t.ai?.disclaimer || 'Aarogya AI is scoped to personal health tracking and does not replace medical consultation.'}</span>
+          <span>{t.ai?.disclaimer || 'MediPulse AI is scoped to personal health tracking and does not replace medical consultation.'}</span>
           <span className="hidden sm:inline font-mono">Session: {activeSession?.title || 'Active'}</span>
         </div>
       </div>

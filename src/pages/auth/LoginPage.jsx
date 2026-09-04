@@ -447,7 +447,7 @@ export const LoginPage = () => {
 
       {/* Footer */}
       <footer className="py-4 text-center text-xs text-slate-400 border-t border-slate-200/60">
-        © 2026 AarogyaTimeline • Personal Health Memory Platform
+        © 2026 MediPulse • Personal Health Memory Platform
       </footer>
     </div>
   );
