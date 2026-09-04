@@ -127,9 +127,15 @@ async function translateOne(text, targetLang) {
  * - Skips already-translated nodes (idempotent)
  */
 export async function translatePage(targetLang) {
-  const hasAi = Boolean(GROQ_PROXY_URL || (GROQ_API_KEY && GROQ_API_KEY !== 'your-groq-api-key-here'));
-  if (targetLang === 'en' || !hasAi) {
+  if (targetLang === 'en') {
     revertPage();
+    return;
+  }
+
+  document.documentElement.lang = targetLang;
+
+  const hasAi = Boolean(GROQ_PROXY_URL || (GROQ_API_KEY && GROQ_API_KEY !== 'your-groq-api-key-here'));
+  if (!hasAi) {
     return;
   }
 

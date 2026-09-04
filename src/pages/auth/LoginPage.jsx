@@ -20,6 +20,7 @@ import { abhaService } from "../../services/abhaService";
 export const LoginPage = () => {
   const { login, abhaLogin, loading } = useAuth();
   const { t } = useLanguage();
+  const authT = t?.auth || {};
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -161,24 +162,23 @@ export const LoginPage = () => {
             <div className="relative z-10">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-teal-200 text-xs font-semibold backdrop-blur-sm mb-6">
                 <Sparkles className="w-3.5 h-3.5" />
-                Personal Health Memory
+                {authT.badge || "Personal Health Memory"}
               </span>
 
               <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight leading-tight">
-                Record. Remember. Understand. Prepare. Share.
+                {authT.headline || "Record. Remember. Understand. Prepare. Share."}
               </h2>
 
               <p className="text-sm text-slate-300 mt-4 leading-relaxed">
-                One living digital timeline for your vitals, symptoms, lab
-                reports, doctor visits, and personal health journey.
+                {authT.subheadline || "One living digital timeline for your vitals, symptoms, lab reports, doctor visits, and personal health journey."}
               </p>
             </div>
 
             <div className="relative z-10 space-y-3 my-8">
               {[
-                "Natural voice input in 10 Indian languages",
-                "Instant AI medical document digitization",
-                "Personal health calendar & analytics",
+                authT.feature1 || "Natural voice input in 10 Indian languages",
+                authT.feature2 || "Instant AI medical document digitization",
+                authT.feature3 || "Personal health calendar & analytics",
               ].map((item, idx) => (
                 <div
                   key={idx}
@@ -194,7 +194,7 @@ export const LoginPage = () => {
 
             <div className="relative z-10 pt-4 border-t border-white/10 flex items-center gap-2 text-xs text-slate-400">
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              <span>Private & secure personal health record</span>
+              <span>{authT.securityBadge || "Private & secure personal health record"}</span>
             </div>
           </div>
 
@@ -202,10 +202,10 @@ export const LoginPage = () => {
           <div className="p-8 sm:p-10 flex flex-col justify-center">
             <div>
               <h3 className="text-2xl font-bold text-slate-900 tracking-tight">
-                Welcome Back
+                {authT.welcomeBack || "Welcome Back"}
               </h3>
               <p className="text-xs text-slate-500 mt-1">
-                Enter your credentials to access your health memory.
+                {authT.welcomeSubtitle || "Enter your credentials to access your health memory."}
               </p>
             </div>
 
@@ -213,10 +213,10 @@ export const LoginPage = () => {
             <div className="mt-5 p-3.5 rounded-2xl bg-health-50 border border-health-200/80 flex items-center justify-between">
               <div>
                 <p className="text-xs font-bold text-health-900">
-                  Demo Account Available
+                  {authT.demoAvailable || "Demo Account Available"}
                 </p>
                 <p className="text-[11px] text-health-700">
-                  Prefilled for Rahul Sharma (32 yrs)
+                  {authT.demoPrefilled || "Prefilled for Rahul Sharma (32 yrs)"}
                 </p>
               </div>
               <button
@@ -224,7 +224,7 @@ export const LoginPage = () => {
                 onClick={handlePrefillDemo}
                 className="px-2.5 py-1 text-xs font-bold text-health-800 bg-white hover:bg-health-100 border border-health-300 rounded-xl transition-all"
               >
-                Autofill
+                {authT.autofill || "Autofill"}
               </button>
             </div>
 
@@ -237,7 +237,7 @@ export const LoginPage = () => {
             <form onSubmit={handleLogin} className="mt-6 space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-600 mb-1">
-                  Email or Phone Number
+                  {authT.emailOrPhone || "Email or Phone Number"}
                 </label>
                 <div className="relative">
                   <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -248,7 +248,7 @@ export const LoginPage = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    placeholder="demo@example.com"
+                    placeholder={authT.emailPlaceholder || "demo@example.com"}
                     className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-2 focus:ring-health-500 focus:bg-white transition-all"
                   />
                 </div>
@@ -257,13 +257,13 @@ export const LoginPage = () => {
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="block text-xs font-semibold text-slate-600">
-                    Password
+                    {authT.password || "Password"}
                   </label>
                   <a
                     href="/signup"
                     className="text-xs font-semibold text-health-700 hover:underline"
                   >
-                    Forgot password?
+                    {authT.forgotPassword || "Forgot password?"}
                   </a>
                 </div>
                 <div className="relative">
@@ -287,7 +287,7 @@ export const LoginPage = () => {
                 className="w-full py-3 px-4 bg-health-600 hover:bg-health-700 text-white font-bold text-sm rounded-2xl shadow-md shadow-health-600/25 hover:shadow-lg transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
               >
                 <span>
-                  {loading ? "Signing in..." : "Login to Health Memory"}
+                  {loading ? (authT.signingIn || "Signing in...") : (authT.loginButton || "Login to Health Memory")}
                 </span>
                 <ArrowRight className="w-4 h-4" />
               </button>
@@ -300,7 +300,7 @@ export const LoginPage = () => {
               </div>
               <div className="relative flex justify-center text-xs">
                 <span className="bg-white px-2 text-slate-400 font-semibold">
-                  or
+                  {authT.or || "or"}
                 </span>
               </div>
             </div>
@@ -308,7 +308,7 @@ export const LoginPage = () => {
             {abhaStep === "idle" ? (
               <form onSubmit={handleAbhaAddressSubmit}>
                 <label className="block text-xs font-semibold text-slate-600 mb-1">
-                  ABHA Address
+                  {authT.abhaAddress || "ABHA Address"}
                 </label>
                 <div className="relative mb-3">
                   <Smartphone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -317,7 +317,7 @@ export const LoginPage = () => {
                     value={abhaAddress}
                     onChange={(e) => setAbhaAddress(e.target.value)}
                     required
-                    placeholder="yourname@abdm"
+                    placeholder={authT.abhaPlaceholder || "yourname@abdm"}
                     className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-2 focus:ring-health-500 focus:bg-white transition-all"
                   />
                 </div>
@@ -338,21 +338,21 @@ export const LoginPage = () => {
                   ) : (
                     <Smartphone className="w-4 h-4" />
                   )}
-                  <span>{abhaLoading ? "Sending OTP..." : "Login with ABHA"}</span>
+                  <span>{abhaLoading ? (authT.sendingOtp || "Sending OTP...") : (authT.loginWithAbha || "Login with ABHA")}</span>
                 </button>
               </form>
             ) : (
               <form onSubmit={handleAbhaOtpSubmit}>
                 <div className="flex items-center justify-between mb-1">
                   <label className="block text-xs font-semibold text-slate-600">
-                    Enter OTP sent to your ABHA-linked mobile
+                    {authT.enterOtp || "Enter OTP sent to your ABHA-linked mobile"}
                   </label>
                   <button
                     type="button"
                     onClick={resetAbhaFlow}
                     className="text-xs font-semibold text-slate-400 hover:text-slate-600"
                   >
-                    Change
+                    {authT.change || "Change"}
                   </button>
                 </div>
 
@@ -361,7 +361,7 @@ export const LoginPage = () => {
                   <div className="mb-3 p-3 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between">
                     <div>
                       <p className="text-[11px] font-bold text-emerald-900 mb-0.5">
-                        Demo OTP (auto-generated from your ABHA address)
+                        {authT.demoOtpNotice || "Demo OTP (auto-generated from your ABHA address)"}
                       </p>
                       <p className="text-sm font-mono font-bold text-emerald-700 tracking-widest">
                         {derivedOtp}
@@ -398,7 +398,7 @@ export const LoginPage = () => {
                   />
                 </div>
                 <p className="text-[11px] text-slate-400 mb-2">
-                  OTP sent to the mobile linked with {abhaAddress}
+                  {authT.otpSentTo || "OTP sent to the mobile linked with"} {abhaAddress}
                 </p>
 
                 {abhaError && (
@@ -417,7 +417,7 @@ export const LoginPage = () => {
                   ) : (
                     <ArrowRight className="w-4 h-4" />
                   )}
-                  <span>{abhaLoading ? "Verifying..." : "Verify & Login"}</span>
+                  <span>{abhaLoading ? (authT.verifying || "Verifying...") : (authT.verifyAndLogin || "Verify & Login")}</span>
                 </button>
 
                 <button
@@ -427,18 +427,18 @@ export const LoginPage = () => {
                   className="w-full mt-2 py-2 px-4 bg-transparent text-health-700 hover:text-health-800 font-semibold text-xs rounded-xl transition-all flex items-center justify-center gap-1.5"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
-                  Resend OTP
+                  {authT.resendOtp || "Resend OTP"}
                 </button>
               </form>
             )}
 
             <p className="text-center text-xs text-slate-500 mt-6">
-              Don't have an account?{" "}
+              {authT.noAccount || "Don't have an account?"}{" "}
               <Link
                 to="/signup"
                 className="font-bold text-health-700 hover:underline"
               >
-                Create an account
+                {authT.createAccount || "Create an account"}
               </Link>
             </p>
           </div>
@@ -447,7 +447,7 @@ export const LoginPage = () => {
 
       {/* Footer */}
       <footer className="py-4 text-center text-xs text-slate-400 border-t border-slate-200/60">
-        © 2026 MediPulse • Personal Health Memory Platform
+        {authT.footerText || "© 2026 MediPulse • Personal Health Memory Platform"}
       </footer>
     </div>
   );
