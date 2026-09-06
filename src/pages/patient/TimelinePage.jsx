@@ -10,7 +10,8 @@ import {
   Stethoscope, 
   FileText, 
   StickyNote, 
-  Calendar as CalendarIcon 
+  Calendar as CalendarIcon,
+  ShieldCheck
 } from 'lucide-react';
 import { useHealth } from '../../context/HealthContext';
 import { useLanguage } from '../../context/LanguageContext';
@@ -24,6 +25,7 @@ export const TimelinePage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all'); // all | vitals | symptom | medicine | doctor_visit | document | note
   const [dateRange, setDateRange] = useState('all'); // 7d | 30d | 3m | 6m | 1y | all
+  const [provenanceFilter, setProvenanceFilter] = useState('all'); // all | hospital_verified | patient_reported
 
   const filterTabs = [
     { key: 'all', label: 'All Events', icon: null },
@@ -59,7 +61,12 @@ export const TimelinePage = () => {
         return false;
       }
 
-      // 3. Search query
+      // 3. Provenance filter (Hospital vs Patient)
+      const isHospital = r.metadata?.provenance === 'hospital_verified' || r.metadata?.doctorName || r.metadata?.hospital || r.metadata?.prescribedBy;
+      if (provenanceFilter === 'hospital_verified' && !isHospital) return false;
+      if (provenanceFilter === 'patient_reported' && isHospital) return false;
+
+      // 4. Search query
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const matchTitle = r.title?.toLowerCase().includes(q);
@@ -71,7 +78,7 @@ export const TimelinePage = () => {
 
       return true;
     });
-  }, [records, selectedFilter, searchQuery, dateRange]);
+  }, [records, selectedFilter, searchQuery, dateRange, provenanceFilter]);
 
   // Group records by Month Year (e.g. "August 2026", "July 2026")
   const groupedByMonth = useMemo(() => {
@@ -174,6 +181,51 @@ export const TimelinePage = () => {
               </button>
             );
           })}
+        </div>
+
+        {/* Clinical Data Provenance Filter Bar */}
+        <div className="flex items-center justify-between pt-2 border-t border-slate-100 flex-wrap gap-2 text-xs">
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+            Data Authenticity:
+          </span>
+
+          <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-xl border border-slate-200/80">
+            <button
+              type="button"
+              onClick={() => setProvenanceFilter('all')}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                provenanceFilter === 'all'
+                  ? 'bg-white text-slate-900 shadow-xs'
+                  : 'text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              All Records
+            </button>
+            <button
+              type="button"
+              onClick={() => setProvenanceFilter('hospital_verified')}
+              className={`flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                provenanceFilter === 'hospital_verified'
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'text-emerald-700 hover:bg-emerald-50'
+              }`}
+            >
+              <ShieldCheck className="w-3 h-3" />
+              <span>Clinically Verified Only</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setProvenanceFilter('patient_reported')}
+              className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                provenanceFilter === 'patient_reported'
+                  ? 'bg-slate-800 text-white shadow-xs'
+                  : 'text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              Patient Self-Reported
+            </button>
+          </div>
         </div>
       </div>
 

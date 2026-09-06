@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Plus, Bell, Heart, User, Sparkles, ArrowLeftToLine } from 'lucide-react';
+import { Search, Plus, Bell, Heart, User, Sparkles, ArrowLeftToLine, Building2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useHealth } from '../../context/HealthContext';
 import { useLanguage } from '../../context/LanguageContext';
@@ -41,6 +41,17 @@ export const TopBar = ({ onSearchChange, searchQuery = '' }) => {
 
       {/* Action Controls & Profile Badge */}
       <div className="flex items-center gap-2 sm:gap-2.5">
+        {/* Hospital OPD Portal Quick Button */}
+        <Link
+          to="/hospital/opd"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-950 bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-300 hover:to-teal-300 rounded-xl shadow-sm transition-all active:scale-95"
+          title="Switch to Hospital OPD Desk"
+        >
+          <Building2 className="w-3.5 h-3.5 text-slate-900" />
+          <span className="hidden md:inline">Hospital OPD Desk</span>
+          <span className="md:hidden">OPD</span>
+        </Link>
+
         {/* Dark / Light Theme Toggle */}
         <ThemeToggle compact={true} />
 

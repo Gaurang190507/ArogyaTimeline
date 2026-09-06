@@ -15,6 +15,12 @@ import { AppLayout } from './components/layout/AppLayout';
 import { LoginPage } from './pages/auth/LoginPage';
 import { SignupPage } from './pages/auth/SignupPage';
 
+import { DoctorProvider } from './context/DoctorContext';
+
+// Hospital & Clinical Pages
+import { HospitalOPDPage } from './pages/hospital/HospitalOPDPage';
+import { ClinicalCaseTakingPage } from './pages/hospital/ClinicalCaseTakingPage';
+
 // Patient Pages
 import { HomePage } from './pages/patient/HomePage';
 import { CalendarPage } from './pages/patient/CalendarPage';
@@ -85,17 +91,25 @@ function App() {
         <AuthProvider>
           <FamilyProvider>
             <HealthProvider>
-              <ErrorBoundary>
-                <Routes>
-                  {/* Public Routes */}
-                  <Route path="/login" element={<LoginPage />} />
-                  <Route path="/signup" element={<SignupPage />} />
+              <DoctorProvider>
+                <ErrorBoundary>
+                  <Routes>
+                    {/* Public Routes */}
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/signup" element={<SignupPage />} />
 
-                  {/* Root redirects to App Home */}
-                  <Route path="/" element={<Navigate to="/app/home" replace />} />
+                    {/* Root redirects to Hospital OPD Desk */}
+                    <Route path="/" element={<Navigate to="/hospital/opd" replace />} />
 
-                  {/* Protected Routes — require authentication */}
-                  <Route element={<RequireAuth />}>
+                    {/* Hospital Clinical EMR & OPD Desk Routes */}
+                    <Route path="/hospital" element={<AppLayout />}>
+                      <Route index element={<Navigate to="/hospital/opd" replace />} />
+                      <Route path="opd" element={<HospitalOPDPage />} />
+                      <Route path="case-taking" element={<ClinicalCaseTakingPage />} />
+                      <Route path="case-taking/:patientId" element={<ClinicalCaseTakingPage />} />
+                    </Route>
+
+                    {/* Patient Health View Routes */}
                     <Route path="/app" element={<AppLayout />}>
                       <Route index element={<Navigate to="/app/home" replace />} />
                       <Route path="home" element={<HomePage />} />
@@ -113,12 +127,12 @@ function App() {
                       <Route path="profile" element={<ProfilePage />} />
                       <Route path="settings" element={<SettingsPage />} />
                     </Route>
-                  </Route>
 
-                  {/* Catch-all */}
-                  <Route path="*" element={<Navigate to="/app/home" replace />} />
-                </Routes>
-              </ErrorBoundary>
+                    {/* Catch-all */}
+                    <Route path="*" element={<Navigate to="/hospital/opd" replace />} />
+                  </Routes>
+                </ErrorBoundary>
+              </DoctorProvider>
             </HealthProvider>
           </FamilyProvider>
         </AuthProvider>

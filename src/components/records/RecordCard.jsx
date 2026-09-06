@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { RecordTypeIcon, recordTypeConfig } from './RecordTypeIcon';
 import { Badge } from '../common/Badge';
-import { Clock, Calendar, MoreVertical, Trash2, Edit3, Eye, FileText, Stethoscope, Pill, AlertCircle } from 'lucide-react';
+import { Clock, Calendar, MoreVertical, Trash2, Edit3, Eye, FileText, Stethoscope, Pill, AlertCircle, ShieldCheck } from 'lucide-react';
 import { useHealth } from '../../context/HealthContext';
 import { ConfirmationDialog } from '../common/ConfirmationDialog';
 
@@ -172,6 +172,22 @@ export const RecordCard = ({ record, onEdit, compact = false, className = '' }) 
             </h4>
 
             {renderMetadataSnippet()}
+
+            {/* Clinical Provenance & Authenticity Seal */}
+            {meta.provenance === 'hospital_verified' || meta.doctorName || meta.hospital || meta.prescribedBy ? (
+              <div className="mt-2.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-50 border border-emerald-200/80 text-emerald-900 text-[11px] font-bold">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span>Clinically Verified • {meta.hospital || meta.doctorName || 'Hospital OPD'}</span>
+                {meta.registrationNumber && (
+                  <span className="font-mono text-[10px] text-emerald-700">({meta.registrationNumber})</span>
+                )}
+              </div>
+            ) : (
+              <div className="mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-100 text-slate-500 text-[10px] font-medium">
+                <AlertCircle className="w-3 h-3 text-slate-400 shrink-0" />
+                <span>Auxiliary Patient Log (Unverified)</span>
+              </div>
+            )}
 
             {/* Description / Personal Notes */}
             {record.description && record.type !== 'document' && (

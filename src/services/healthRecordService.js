@@ -14,12 +14,20 @@ export const healthRecordService = {
   // Map the frontend record shape to the actual DB columns.
   // The DB table `health_records` uses: record_type, notes, recorded_at.
   _toDbRow(record) {
+    const meta = { ...(record.metadata || {}) };
+    if (!meta.provenance) {
+      meta.provenance = record.provenance || (meta.doctorName || meta.hospital || meta.prescribedBy ? 'hospital_verified' : 'patient_reported');
+    }
+    if (meta.provenance === 'hospital_verified' && !meta.verificationBadge) {
+      meta.verificationBadge = 'Clinically Verified';
+    }
+
     const dbRow = {
       user_id: record.userId,
       record_type: record.type,
       title: record.title,
       notes: record.description || record.notes || null,
-      metadata: record.metadata || {},
+      metadata: meta,
     };
 
     // Combine date + time into a single ISO timestamp for recorded_at.

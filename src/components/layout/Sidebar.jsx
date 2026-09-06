@@ -14,7 +14,9 @@ import {
   CalendarCheck, 
   Bell, 
   User, 
-  Settings
+  Settings,
+  Building2,
+  ShieldCheck
 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useHealth } from '../../context/HealthContext';
@@ -61,11 +63,57 @@ export const Sidebar = () => {
         </div>
       </div>
 
+      {/* Hospital Portal & OPD Clinical Switcher Banner */}
+      <div className="mb-4 p-3.5 rounded-2xl bg-gradient-to-r from-emerald-950 via-slate-900 to-teal-950 border border-emerald-800/40 text-white shadow-md">
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1">
+            <Building2 className="w-3.5 h-3.5 text-emerald-400" />
+            Hospital Portal
+          </span>
+          <span className="px-1.5 py-0.2 rounded-md bg-emerald-500/20 text-emerald-300 text-[9px] font-mono font-bold">
+            MCI Certified
+          </span>
+        </div>
+        <p className="text-xs font-bold text-white leading-tight">
+          Apollo Multi-Specialty OPD
+        </p>
+        <p className="text-[10px] text-slate-400 mt-0.5">
+          Dr. Rahul Sharma • Ward 4
+        </p>
+
+        <div className="mt-2.5 grid grid-cols-2 gap-1.5">
+          <NavLink
+            to="/hospital/opd"
+            className={({ isActive }) =>
+              `py-1.5 px-2 rounded-xl text-[11px] font-bold text-center transition-all flex items-center justify-center gap-1 ${
+                isActive
+                  ? 'bg-emerald-500 text-slate-950 shadow-sm'
+                  : 'bg-white/10 hover:bg-white/20 text-emerald-200'
+              }`
+            }
+          >
+            <span>OPD Queue</span>
+          </NavLink>
+          <NavLink
+            to="/hospital/case-taking"
+            className={({ isActive }) =>
+              `py-1.5 px-2 rounded-xl text-[11px] font-bold text-center transition-all flex items-center justify-center gap-1 ${
+                isActive
+                  ? 'bg-emerald-500 text-slate-950 shadow-sm'
+                  : 'bg-white/10 hover:bg-white/20 text-emerald-200'
+              }`
+            }
+          >
+            <span>Case Desk</span>
+          </NavLink>
+        </div>
+      </div>
+
       {/* Primary Action Button */}
       <button
         type="button"
         onClick={() => openAddRecord('blood_pressure')}
-        className="w-full flex items-center justify-center gap-2 py-3 px-4 mb-4 rounded-2xl bg-health-600 hover:bg-health-700 text-white font-bold text-sm shadow-md shadow-health-600/25 hover:shadow-lg transition-all active:scale-[0.98]"
+        className="w-full flex items-center justify-center gap-2 py-2.5 px-4 mb-4 rounded-2xl bg-health-600 hover:bg-health-700 text-white font-bold text-xs shadow-md shadow-health-600/25 hover:shadow-lg transition-all active:scale-[0.98]"
       >
         <PlusCircle className="w-4 h-4" />
         <span>{t.nav.addRecord}</span>

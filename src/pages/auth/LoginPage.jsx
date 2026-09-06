@@ -11,6 +11,7 @@ import {
   Smartphone,
   RefreshCw,
   Copy,
+  Building2,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useLanguage } from "../../context/LanguageContext";
@@ -160,31 +161,32 @@ export const LoginPage = () => {
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -ml-20 -mb-20 pointer-events-none" />
 
             <div className="relative z-10">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-teal-200 text-xs font-semibold backdrop-blur-sm mb-6">
-                <Sparkles className="w-3.5 h-3.5" />
-                {authT.badge || "Personal Health Memory"}
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-400/30 backdrop-blur-sm mb-6">
+                <Building2 className="w-3.5 h-3.5 text-emerald-400" />
+                Hospital Clinical EMR & OPD Desk
               </span>
 
               <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight leading-tight">
-                {authT.headline || "Record. Remember. Understand. Prepare. Share."}
+                Clinician Case-Taking & Verified Health Records.
               </h2>
 
               <p className="text-sm text-slate-300 mt-4 leading-relaxed">
-                {authT.subheadline || "One living digital timeline for your vitals, symptoms, lab reports, doctor visits, and personal health journey."}
+                Hospital OPD triage, AI ambient doctor case-taking (SOAP), verified e-prescriptions, and ABDM-authenticated medical records.
               </p>
             </div>
 
             <div className="relative z-10 space-y-3 my-8">
               {[
-                authT.feature1 || "Natural voice input in 10 Indian languages",
-                authT.feature2 || "Instant AI medical document digitization",
-                authT.feature3 || "Personal health calendar & analytics",
+                "Hospital OPD triage & live patient queue management",
+                "Ambient AI clinical scribe for doctor case-taking (SOAP)",
+                "NMC/MCI digitally signed verified e-prescriptions",
+                "ABDM certified Health Information Provider (HIP)",
               ].map((item, idx) => (
                 <div
                   key={idx}
                   className="flex items-center gap-2.5 text-xs text-teal-100 font-medium"
                 >
-                  <div className="w-5 h-5 rounded-full bg-teal-500/20 text-teal-300 flex items-center justify-center shrink-0">
+                  <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-300 flex items-center justify-center shrink-0">
                     <Check className="w-3 h-3" />
                   </div>
                   <span>{item}</span>
@@ -194,7 +196,7 @@ export const LoginPage = () => {
 
             <div className="relative z-10 pt-4 border-t border-white/10 flex items-center gap-2 text-xs text-slate-400">
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              <span>{authT.securityBadge || "Private & secure personal health record"}</span>
+              <span>100% Clinically Verified • Tamper-Proof Hospital Provenance</span>
             </div>
           </div>
 
@@ -202,30 +204,53 @@ export const LoginPage = () => {
           <div className="p-8 sm:p-10 flex flex-col justify-center">
             <div>
               <h3 className="text-2xl font-bold text-slate-900 tracking-tight">
-                {authT.welcomeBack || "Welcome Back"}
+                Medical Portal Login
               </h3>
               <p className="text-xs text-slate-500 mt-1">
-                {authT.welcomeSubtitle || "Enter your credentials to access your health memory."}
+                Access hospital clinical OPD desk or patient health records.
               </p>
             </div>
 
-            {/* Demo autofill notice */}
-            <div className="mt-5 p-3.5 rounded-2xl bg-health-50 border border-health-200/80 flex items-center justify-between">
-              <div>
-                <p className="text-xs font-bold text-health-900">
-                  {authT.demoAvailable || "Demo Account Available"}
-                </p>
-                <p className="text-[11px] text-health-700">
-                  {authT.demoPrefilled || "Prefilled for Rahul Sharma (32 yrs)"}
-                </p>
+            {/* Hospital OPD Portal Direct Entry Card */}
+            <div className="mt-5 space-y-2">
+              <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200/90 flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <Building2 className="w-3.5 h-3.5 text-emerald-700" />
+                    <p className="text-xs font-bold text-emerald-950">
+                      Hospital OPD Clinician Portal
+                    </p>
+                  </div>
+                  <p className="text-[11px] text-emerald-800 mt-0.5">
+                    Dr. Rahul Sharma (Apollo Hospital • Ward 4)
+                  </p>
+                </div>
+                <Link
+                  to="/hospital/opd"
+                  className="px-3 py-1.5 text-xs font-black text-slate-950 bg-emerald-400 hover:bg-emerald-300 rounded-xl shadow-xs transition-all active:scale-95 shrink-0"
+                >
+                  Enter OPD
+                </Link>
               </div>
-              <button
-                type="button"
-                onClick={handlePrefillDemo}
-                className="px-2.5 py-1 text-xs font-bold text-health-800 bg-white hover:bg-health-100 border border-health-300 rounded-xl transition-all"
-              >
-                {authT.autofill || "Autofill"}
-              </button>
+
+              {/* Patient Demo autofill notice */}
+              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold text-slate-800">
+                    Patient Health Account
+                  </p>
+                  <p className="text-[11px] text-slate-500">
+                    Prefilled for Rahul Sharma (32 yrs • ABHA)
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handlePrefillDemo}
+                  className="px-2.5 py-1 text-xs font-bold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 rounded-xl transition-all"
+                >
+                  Autofill
+                </button>
+              </div>
             </div>
 
             {error && (
